@@ -1,44 +1,202 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-function SectionHeader({ icon, title, description }) {
+const EMPTY_FILTERS = {
+  keyword: '',
+  location: '',
+  type: '',
+  experience: '',
+  salaryMin: ''
+};
+
+const EMPTY_FORM = {
+  fullName: '',
+  email: '',
+  phone: '',
+  cvLink: '',
+  message: ''
+};
+
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Moi nhat' },
+  { value: 'salary_desc', label: 'Luong cao truoc' },
+  { value: 'salary_asc', label: 'Luong thap truoc' }
+];
+
+const SAVED_JOBS_KEY = 'viec3mien_saved_jobs';
+
+function formatDate(dateValue) {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) {
+    return dateValue;
+  }
+  return new Intl.DateTimeFormat('vi-VN').format(date);
+}
+
+function getInitials(name) {
+  const words = String(name || '')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2);
+
+  if (!words.length) {
+    return 'V3';
+  }
+
+  return words.map((word) => word[0]?.toUpperCase() || '').join('');
+}
+
+function Header({ homeData }) {
   return (
-    <div className="section-header">
-      <div className="section-title-wrap">
-        <img src={icon} alt="section icon" className="section-icon" />
-        <h2>{title}</h2>
+    <header className="topbar">
+      <div className="container topbar-inner">
+        <a className="brand" href="#">
+          <span className="brand-mark">V3M</span>
+          <div>
+            <strong>{homeData.brand.name}</strong>
+            <p>{homeData.brand.subtitle}</p>
+          </div>
+        </a>
+
+        <nav className="top-nav">
+          {homeData.nav.map((item) => (
+            <a key={item.label} href={item.href}>
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="top-actions">
+          <a href={`tel:${homeData.brand.hotline.replace(/\s+/g, '')}`} className="chip">
+            Hotline {homeData.brand.hotline}
+          </a>
+          <a href="#jobs" className="btn btn-primary">
+            Tim viec ngay
+          </a>
+        </div>
       </div>
-      <p>{description}</p>
-    </div>
+    </header>
+  );
+}
+
+function Hero({ homeData, activeBanner, onChangeBanner }) {
+  const banner = homeData.heroBanners[activeBanner] ?? homeData.heroBanners[0];
+
+  return (
+    <section className="hero">
+      <div className="hero-media">
+        <picture>
+          <source media="(max-width: 768px)" srcSet={banner.imageMobile} />
+          <img src={banner.imageDesktop} alt={banner.title} />
+        </picture>
+        <div className="hero-overlay" />
+      </div>
+
+      <div className="container hero-content">
+        <p className="hero-kicker">Recruitment Platform</p>
+        <h1>{banner.title}</h1>
+        <p className="hero-description">{banner.description}</p>
+
+        <div className="hero-cta">
+          <a className="btn btn-primary" href={banner.ctaPrimary.href}>
+            {banner.ctaPrimary.label}
+          </a>
+          <a className="btn btn-secondary" href={banner.ctaSecondary.href}>
+            {banner.ctaSecondary.label}
+          </a>
+        </div>
+
+        <div className="hero-dots" aria-label="Hero slides">
+          {homeData.heroBanners.map((item, index) => (
+            <button
+              key={item.id}
+              type="button"
+              className={index === activeBanner ? 'active' : ''}
+              onClick={() => onChangeBanner(index)}
+              aria-label={`Chuyen banner ${index + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="container metrics-grid">
+        {homeData.quickStats.map((item) => (
+          <article key={item.label} className="metric-card">
+            <strong>{item.value}</strong>
+            <span>{item.label}</span>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
 function App() {
   const [homeData, setHomeData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [formData, setFormData] = useState({
-    keyword: '',
-    location: '',
-    type: ''
+  const [loadingError, setLoadingError] = useState('');
+
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
+  const [sort, setSort] = useState('newest');
+  const [page, setPage] = useState(1);
+
+  const [jobsPayload, setJobsPayload] = useState({
+    items: [],
+    total: 0,
+    page: 1,
+    pageSize: 6,
+    totalPages: 1,
+    filters: {
+      locations: [],
+      types: [],
+      experienceLevels: [],
+      salaryOptions: []
+    }
   });
-  const [notice, setNotice] = useState('');
+  const [jobsLoading, setJobsLoading] = useState(true);
+  const [jobsError, setJobsError] = useState('');
+
+  const [savedJobs, setSavedJobs] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem(SAVED_JOBS_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_error) {
+      return [];
+    }
+  });
+
+  const [activeBanner, setActiveBanner] = useState(0);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [applyForm, setApplyForm] = useState(EMPTY_FORM);
+  const [applying, setApplying] = useState(false);
+  const [applyFeedback, setApplyFeedback] = useState({ type: '', message: '' });
 
   useEffect(() => {
-    let isMounted = true;
+    let active = true;
 
     const fetchHomeData = async () => {
+      setLoading(true);
+      setLoadingError('');
+
       try {
         const response = await fetch('/api/home-data');
-        const data = await response.json();
-        if (isMounted) {
-          setHomeData(data);
+        if (!response.ok) {
+          throw new Error('Cannot load home data');
         }
+
+        const data = await response.json();
+        if (!active) {
+          return;
+        }
+
+        setHomeData(data);
       } catch (_error) {
-        if (isMounted) {
-          setNotice('Không thể tải dữ liệu. Vui lòng kiểm tra API server.');
+        if (active) {
+          setLoadingError('Khong the tai du lieu trang. Vui long kiem tra server API.');
         }
       } finally {
-        if (isMounted) {
+        if (active) {
           setLoading(false);
         }
       }
@@ -47,7 +205,7 @@ function App() {
     fetchHomeData();
 
     return () => {
-      isMounted = false;
+      active = false;
     };
   }, []);
 
@@ -57,326 +215,474 @@ function App() {
     }
 
     const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % homeData.heroBanners.length);
+      setActiveBanner((previous) => (previous + 1) % homeData.heroBanners.length);
     }, 5000);
 
     return () => clearInterval(timer);
   }, [homeData]);
 
-  const currentBanner = useMemo(() => {
-    if (!homeData?.heroBanners?.length) {
-      return null;
-    }
-    return homeData.heroBanners[activeSlide];
-  }, [homeData, activeSlide]);
+  useEffect(() => {
+    const controller = new AbortController();
 
-  const handleSearchSubmit = (event) => {
+    const fetchJobs = async () => {
+      setJobsLoading(true);
+      setJobsError('');
+
+      try {
+        const params = new URLSearchParams({
+          page: String(page),
+          pageSize: '6',
+          sort
+        });
+
+        Object.entries(appliedFilters).forEach(([key, value]) => {
+          if (value) {
+            params.set(key, value);
+          }
+        });
+
+        const response = await fetch(`/api/jobs?${params.toString()}`, {
+          signal: controller.signal
+        });
+
+        if (!response.ok) {
+          throw new Error('Cannot load jobs');
+        }
+
+        const data = await response.json();
+        setJobsPayload(data);
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          setJobsError('Khong the tai danh sach viec lam.');
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setJobsLoading(false);
+        }
+      }
+    };
+
+    fetchJobs();
+
+    return () => controller.abort();
+  }, [appliedFilters, page, sort]);
+
+  useEffect(() => {
+    window.localStorage.setItem(SAVED_JOBS_KEY, JSON.stringify(savedJobs));
+  }, [savedJobs]);
+
+  useEffect(() => {
+    if (!selectedJob) {
+      return undefined;
+    }
+
+    document.body.classList.add('modal-open');
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setSelectedJob(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.body.classList.remove('modal-open');
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [selectedJob]);
+
+  const savedJobList = useMemo(() => {
+    if (!homeData?.jobs?.length) {
+      return [];
+    }
+
+    const lookup = new Map(homeData.jobs.map((job) => [job.id, job]));
+    return savedJobs.map((id) => lookup.get(id)).filter(Boolean);
+  }, [homeData, savedJobs]);
+
+  const totalVisible = jobsPayload.items.length;
+
+  const handleFilterChange = (field, value) => {
+    setFilters((previous) => ({
+      ...previous,
+      [field]: value
+    }));
+  };
+
+  const handleApplyFilters = (event) => {
     event.preventDefault();
-    const keyword = formData.keyword || '\u0074\u1ea5t c\u1ea3';
-    const location = formData.location || '\u0074o\u00e0n qu\u1ed1c';
-    setNotice('\u0110\u00e3 nh\u1eadn y\u00eau c\u1ea7u t\u00ecm vi\u1ec7c: ' + keyword + ' - ' + location + '.');
+    setPage(1);
+    setAppliedFilters(filters);
+  };
+
+  const handleResetFilters = () => {
+    setFilters(EMPTY_FILTERS);
+    setAppliedFilters(EMPTY_FILTERS);
+    setSort('newest');
+    setPage(1);
+  };
+
+  const toggleSavedJob = (jobId) => {
+    setSavedJobs((previous) => {
+      if (previous.includes(jobId)) {
+        return previous.filter((id) => id !== jobId);
+      }
+      return [jobId, ...previous];
+    });
+  };
+
+  const openJobModal = (job) => {
+    setSelectedJob(job);
+    setApplyForm(EMPTY_FORM);
+    setApplyFeedback({ type: '', message: '' });
+  };
+
+  const closeJobModal = () => {
+    setSelectedJob(null);
+  };
+
+  const handleSubmitApplication = async (event) => {
+    event.preventDefault();
+
+    if (!selectedJob) {
+      return;
+    }
+
+    setApplying(true);
+    setApplyFeedback({ type: '', message: '' });
+
+    try {
+      const response = await fetch('/api/applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...applyForm,
+          jobId: selectedJob.id
+        })
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload?.message || 'Ung tuyen that bai.');
+      }
+
+      setApplyForm(EMPTY_FORM);
+      setApplyFeedback({
+        type: 'success',
+        message: payload.message || 'Ung tuyen thanh cong.'
+      });
+    } catch (error) {
+      setApplyFeedback({
+        type: 'error',
+        message: error.message || 'Khong the gui ho so. Vui long thu lai.'
+      });
+    } finally {
+      setApplying(false);
+    }
   };
 
   if (loading) {
     return (
-      <main className="loading-screen">
-        <div className="loading-card">
-          <h1>Việc 3 Miền</h1>
-          <p>Đang tải giao diện trang chủ...</p>
+      <main className="state-screen">
+        <div className="state-card">
+          <h1>Viec 3 Mien</h1>
+          <p>Dang tai nen tang tuyen dung...</p>
         </div>
       </main>
     );
   }
 
-  if (!homeData) {
+  if (loadingError || !homeData) {
     return (
-      <main className="loading-screen">
-        <div className="loading-card">
-          <h1>Không có dữ liệu</h1>
-          <p>Vui lòng bật server Node.js tại cổng 5050.</p>
+      <main className="state-screen">
+        <div className="state-card">
+          <h1>Khong the tai du lieu</h1>
+          <p>{loadingError || 'Vui long kiem tra backend API.'}</p>
         </div>
       </main>
     );
   }
 
   return (
-    <div className="page">
-      <div className="bg-shape bg-shape-1" />
-      <div className="bg-shape bg-shape-2" />
-      <header className="site-header animate-fade-up">
-        <div className="container">
-          <div className="header-shell">
-            <a href="/" className="brand" aria-label="Trang chu SHG">
-              <img
-                className="brand-logo"
-                src="/logo-shg.svg"
-                alt="SHG"
-              />
-            </a>
-
-            <nav className="main-nav">
-              {homeData.nav.map((item) => (
-                <a key={item.label} href={item.href}>
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-
-            <div className="header-actions">
-              <a className="hotline" href="tel:0812533533">
-                Hotline: {homeData.brand.hotline}
-              </a>
-              <a className="btn-outline" href="/candidate-profile">
-                {'\u0110\u0103ng nh\u1eadp'}
-              </a>
-              <a className="btn-header-primary" href="/candidate-profile">
-                {'\u0110\u0103ng k\u00fd'}
-              </a>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="site-shell">
+      <Header homeData={homeData} />
+      <Hero homeData={homeData} activeBanner={activeBanner} onChangeBanner={setActiveBanner} />
 
       <main>
-        <section className="hero-section animate-fade-up">
-          <div className="hero-banner">
-            {currentBanner && (
-              <picture className="hero-banner-media">
-                <source media="(max-width: 767px)" srcSet={currentBanner.imageMobile} />
-                <img src={currentBanner.imageDesktop} alt={currentBanner.title} />
-              </picture>
-            )}
-
-            <div className="hero-banner-overlay" />
-
-            <div className="container hero-banner-content">
-              <div className="hero-search-panel">
-                <p className="hero-kicker">{'\u0043\u00f9ng t\u00ecm ki\u1ebfm'}</p>
-                <h1>{'\u0043\u00f4ng vi\u1ec7c m\u01a1 \u01b0\u1edbc c\u1ee7a b\u1ea1n'}</h1>
-
-                <form className="hero-search-form" onSubmit={handleSearchSubmit}>
-                  <div className="hero-search-row hero-search-row-main">
-                    <input
-                      type="text"
-                      placeholder={"\u0054\u00ecm ki\u1ebfm vi\u1ec7c l\u00e0m"}
-                      value={formData.keyword}
-                      onChange={(event) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          keyword: event.target.value
-                        }))
-                      }
-                    />
-                    <button type="submit">{"\u0054\u00ecm ki\u1ebfm"}</button>
-                  </div>
-
-                  <div className="hero-search-row hero-search-row-sub">
-                    <input
-                      type="text"
-                      placeholder={"\u0054\u1ea5t c\u1ea3 t\u1ec9nh th\u00e0nh"}
-                      value={formData.location}
-                      onChange={(event) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          location: event.target.value
-                        }))
-                      }
-                    />
-
-                    <select
-                      value={formData.type}
-                      onChange={(event) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          type: event.target.value
-                        }))
-                      }
-                    >
-                      <option value="">{"\u0054\u1ea5t c\u1ea3 m\u1ee9c l\u01b0\u01a1ng"}</option>
-                      <option value="10-15">{"10 - 15 tri\u1ec7u"}</option>
-                      <option value="15-20">{"15 - 20 tri\u1ec7u"}</option>
-                      <option value="20+">{"Tr\u00ean 20 tri\u1ec7u"}</option>
-                    </select>
-                  </div>
-                </form>
-
-                {notice && <p className="hero-search-notice">{notice}</p>}
-              </div>
+        <section className="job-explorer" id="jobs">
+          <div className="container">
+            <div className="section-heading">
+              <p>Job Explorer</p>
+              <h2>Tim viec phu hop theo bo loc chuyen sau</h2>
+              <span>
+                Dang hien thi {totalVisible}/{jobsPayload.total} vi tri
+              </span>
             </div>
 
-            <div className="slider-dots slider-dots-hero">
-              {homeData.heroBanners.map((banner, index) => (
-                <button
-                  key={banner.id}
-                  type="button"
-                  className={index === activeSlide ? 'active' : ''}
-                  onClick={() => setActiveSlide(index)}
-                  aria-label={"Xem banner " + (index + 1)}
+            <form className="filter-panel" onSubmit={handleApplyFilters}>
+              <div className="field-group field-keyword">
+                <label htmlFor="keyword">Tu khoa</label>
+                <input
+                  id="keyword"
+                  type="text"
+                  placeholder="Vi du: kho van, QA, HSE..."
+                  value={filters.keyword}
+                  onChange={(event) => handleFilterChange('keyword', event.target.value)}
                 />
-              ))}
-            </div>
-          </div>
-        </section>
+              </div>
 
-        <section className="hero-metrics-section animate-fade-up">
-          <div className="container">
-            <div className="stats-grid stats-grid-hero">
-              {homeData.quickStats.map((item) => (
-                <article key={item.label} className="stat-card">
-                  <strong>{item.value}</strong>
-                  <span>{item.label}</span>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section-block animate-fade-up">
-          <div className="container">
-            <SectionHeader
-              icon="https://viec3mien.vn/assets/icons/company-rounded.svg"
-              title="Việc Làm Nổi Bật"
-              description="Danh sách vị trí được quan tâm nhiều nhất hôm nay."
-            />
-
-            <div className="job-grid">
-              {homeData.featuredJobs.map((job, index) => (
-                <article key={job.id} className="job-card" style={{ animationDelay: `${index * 70}ms` }}>
-                  <h3>{job.title}</h3>
-                  <p className="job-company">{job.company}</p>
-                  <ul>
-                    <li>{job.location}</li>
-                    <li>{job.salary}</li>
-                  </ul>
-                  <div className="job-tags">
-                    {job.tags.map((tag) => (
-                      <span key={tag}>{tag}</span>
-                    ))}
-                  </div>
-                  <a href="/viec-lam-chi-tiet" className="text-link">
-                    Xem chi tiết
-                  </a>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section-block section-company animate-fade-up">
-          <div className="container">
-            <SectionHeader
-              icon="https://viec3mien.vn/assets/icons/company-rounded.svg"
-              title="Doanh Nghiệp Nổi Bật"
-              description="Đối tác đang có nhu cầu tuyển dụng liên tục theo tháng."
-            />
-
-            <div className="company-grid">
-              {homeData.topCompanies.map((company, index) => (
-                <article
-                  key={company.id}
-                  className="company-card"
-                  style={{ animationDelay: `${index * 80}ms` }}
+              <div className="field-group">
+                <label htmlFor="location">Khu vuc</label>
+                <select
+                  id="location"
+                  value={filters.location}
+                  onChange={(event) => handleFilterChange('location', event.target.value)}
                 >
-                  {company.official && <span className="official-tag">Official</span>}
-                  <img src={company.logo} alt={company.name} className="company-logo" />
-                  <h3>{company.name}</h3>
-                  <p>{company.field}</p>
-                  <p>{company.location}</p>
-                  <strong>{company.openJobs} vị trí đang tuyển</strong>
-                  <a href="/company" className="text-link">
-                    Xem doanh nghiệp
-                  </a>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+                  <option value="">Tat ca khu vuc</option>
+                  {jobsPayload.filters.locations.map((location) => (
+                    <option key={location} value={location}>
+                      {location}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        <section className="section-block animate-fade-up">
-          <div className="container">
-            <SectionHeader
-              icon="https://viec3mien.vn/assets/icons/news-rounded.svg"
-              title="Dịch Vụ"
-              description="Giải pháp tuyển dụng và tư vấn chuyên sâu cho doanh nghiệp sản xuất."
-            />
-
-            <div className="service-grid">
-              {homeData.services.map((service, index) => (
-                <article
-                  key={service.id}
-                  className="service-card"
-                  style={{ animationDelay: `${index * 90}ms` }}
+              <div className="field-group">
+                <label htmlFor="type">Loai hinh</label>
+                <select
+                  id="type"
+                  value={filters.type}
+                  onChange={(event) => handleFilterChange('type', event.target.value)}
                 >
-                  <img src={service.image} alt={service.title} />
-                  <h3>{service.title}</h3>
-                  <p>{service.description}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+                  <option value="">Tat ca loai hinh</option>
+                  {jobsPayload.filters.types.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        <section className="section-block section-news animate-fade-up">
-          <div className="container">
-            <SectionHeader
-              icon="https://viec3mien.vn/assets/icons/news-rounded.svg"
-              title="Tin Tức Tuyển Dụng"
-              description="Cập nhật nhanh xu hướng thị trường lao động và chính sách mới."
-            />
+              <div className="field-group">
+                <label htmlFor="experience">Kinh nghiem</label>
+                <select
+                  id="experience"
+                  value={filters.experience}
+                  onChange={(event) => handleFilterChange('experience', event.target.value)}
+                >
+                  <option value="">Tat ca muc kinh nghiem</option>
+                  {jobsPayload.filters.experienceLevels.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="news-grid">
-              <article className="news-main-card">
-                <img src={homeData.news[0].image} alt={homeData.news[0].title} />
-                <div className="news-content">
-                  <span>{homeData.news[0].date}</span>
-                  <h3>{homeData.news[0].title}</h3>
-                  <p>{homeData.news[0].description}</p>
-                  <a href={homeData.news[0].href} className="text-link">
-                    Đọc bài viết
-                  </a>
+              <div className="field-group">
+                <label htmlFor="salaryMin">Muc luong</label>
+                <select
+                  id="salaryMin"
+                  value={filters.salaryMin}
+                  onChange={(event) => handleFilterChange('salaryMin', event.target.value)}
+                >
+                  <option value="">Tat ca muc luong</option>
+                  {jobsPayload.filters.salaryOptions.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="field-group">
+                <label htmlFor="sort">Sap xep</label>
+                <select id="sort" value={sort} onChange={(event) => setSort(event.target.value)}>
+                  {SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="filter-actions">
+                <button className="btn btn-primary" type="submit">
+                  Ap dung bo loc
+                </button>
+                <button className="btn btn-ghost" type="button" onClick={handleResetFilters}>
+                  Dat lai
+                </button>
+              </div>
+            </form>
+
+            <div className="jobs-layout">
+              <div className="jobs-column">
+                {jobsError && <p className="jobs-message error">{jobsError}</p>}
+                {jobsLoading && <p className="jobs-message">Dang tai danh sach viec lam...</p>}
+
+                {!jobsLoading && !jobsError && jobsPayload.items.length === 0 && (
+                  <p className="jobs-message">Khong tim thay viec lam phu hop bo loc hien tai.</p>
+                )}
+
+                <div className="job-grid">
+                  {jobsPayload.items.map((job) => {
+                    const isSaved = savedJobs.includes(job.id);
+
+                    return (
+                      <article key={job.id} className="job-card">
+                        <div className="job-head">
+                          <div>
+                            {job.urgent && <span className="badge badge-alert">Tuyen gap</span>}
+                            <h3>{job.title}</h3>
+                            <p>{job.company}</p>
+                          </div>
+                          <button
+                            type="button"
+                            className={`icon-btn ${isSaved ? 'saved' : ''}`}
+                            onClick={() => toggleSavedJob(job.id)}
+                            aria-label={isSaved ? 'Bo luu tin' : 'Luu tin'}
+                          >
+                            {isSaved ? 'Saved' : 'Save'}
+                          </button>
+                        </div>
+
+                        <ul className="job-meta">
+                          <li>{job.location}</li>
+                          <li>{job.district}</li>
+                          <li>{job.salaryLabel}</li>
+                          <li>{job.typeLabel}</li>
+                          <li>{job.experienceLabel}</li>
+                        </ul>
+
+                        <p className="job-summary">{job.summary}</p>
+
+                        <div className="job-tags">
+                          {job.tags.map((tag) => (
+                            <span key={tag}>{tag}</span>
+                          ))}
+                        </div>
+
+                        <div className="job-footer">
+                          <div>
+                            <small>Dang tuyen tu {formatDate(job.postedAt)}</small>
+                            <strong>Han nop {formatDate(job.deadline)}</strong>
+                          </div>
+                          <button type="button" className="btn btn-secondary" onClick={() => openJobModal(job)}>
+                            Xem chi tiet
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
-              </article>
 
-              <div className="news-list">
-                {homeData.news.slice(1).map((item) => (
-                  <article key={item.id} className="news-sub-card">
-                    <img src={item.image} alt={item.title} />
-                    <div>
-                      <span>{item.date}</span>
-                      <h4>{item.title}</h4>
-                      <p>{item.description}</p>
-                      <a href={item.href} className="text-link">
-                        Xem thêm
-                      </a>
-                    </div>
-                  </article>
-                ))}
+                <div className="pagination">
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    disabled={jobsPayload.page <= 1 || jobsLoading}
+                    onClick={() => setPage((value) => Math.max(1, value - 1))}
+                  >
+                    Trang truoc
+                  </button>
+                  <span>
+                    Trang {jobsPayload.page}/{jobsPayload.totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    disabled={jobsPayload.page >= jobsPayload.totalPages || jobsLoading}
+                    onClick={() => setPage((value) => Math.min(jobsPayload.totalPages, value + 1))}
+                  >
+                    Trang sau
+                  </button>
+                </div>
               </div>
+
+              <aside className="sidebar-column">
+                <div className="panel">
+                  <h3>Tin da luu ({savedJobList.length})</h3>
+                  {savedJobList.length === 0 && <p>Ban chua luu tin nao. Bam Save de danh dau viec quan tam.</p>}
+                  {savedJobList.slice(0, 4).map((job) => (
+                    <button key={job.id} type="button" className="saved-job" onClick={() => openJobModal(job)}>
+                      <strong>{job.title}</strong>
+                      <span>
+                        {job.company} - {job.location}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="panel" id="companies">
+                  <h3>Doanh nghiep noi bat</h3>
+                  {homeData.topCompanies.map((company) => (
+                    <article key={company.id} className="company-item">
+                      <div className="logo-fallback">{getInitials(company.name)}</div>
+                      <div>
+                        <strong>{company.name}</strong>
+                        <p>
+                          {company.field} | {company.location}
+                        </p>
+                        <small>{company.openJobs} vi tri dang tuyen</small>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="panel quote-panel">
+                  <h3>Phan hoi tu doi tac</h3>
+                  {homeData.testimonials.map((item) => (
+                    <blockquote key={item.id}>
+                      <p>{item.quote}</p>
+                      <cite>{item.author}</cite>
+                    </blockquote>
+                  ))}
+                </div>
+              </aside>
             </div>
           </div>
         </section>
 
-        <section className="download-section animate-fade-up">
-          <div className="container download-grid">
-            <div>
-              <h2>Tải App Việc 3 Miền</h2>
-              <p>
-                Theo dõi việc làm mới theo thời gian thực, nhận thông báo phỏng vấn và quản lý hồ sơ ứng tuyển ngay trên
-                điện thoại.
-              </p>
-              <div className="download-actions">
-                <a href={homeData.appLinks.ios} className="btn-primary">
-                  App Store
-                </a>
-                <a href={homeData.appLinks.android} className="btn-ghost">
-                  Google Play
-                </a>
-              </div>
+        <section className="journey" id="journey">
+          <div className="container">
+            <div className="section-heading">
+              <p>Candidate Journey</p>
+              <h2>Quy trinh ung tuyen minh bach va nhanh gon</h2>
             </div>
-            <a href={homeData.appLinks.download} className="qr-box">
-              <span>QR Download</span>
-              <strong>download-app.viec3mien.vn</strong>
-            </a>
+            <div className="journey-grid">
+              {homeData.talentJourney.map((step, index) => (
+                <article key={step.id} className="journey-card">
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="services" id="services">
+          <div className="container">
+            <div className="section-heading">
+              <p>Employer Solutions</p>
+              <h2>Dich vu tuyen dung cho doanh nghiep</h2>
+            </div>
+            <div className="service-grid">
+              {homeData.services.map((service) => (
+                <article key={service.id} className="service-card">
+                  <img src={service.image} alt={service.title} loading="lazy" />
+                  <div>
+                    <h3>{service.title}</h3>
+                    <p>{service.description}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
       </main>
@@ -385,15 +691,16 @@ function App() {
         <div className="container footer-grid">
           <div>
             <h3>{homeData.brand.name}</h3>
-            <p>GTV Investment Consultancy Joint Stock Company</p>
-            <p>Hotline: {homeData.brand.hotline}</p>
+            <p>{homeData.brand.subtitle}</p>
+            <p>
+              Hotline: {homeData.brand.hotline} | Email: {homeData.brand.email}
+            </p>
           </div>
-
           <div>
-            <h4>Kết nối</h4>
-            <div className="social-list">
+            <h4>Ket noi</h4>
+            <div className="social-links">
               {homeData.brand.socialLinks.map((link) => (
-                <a key={link.label} href={link.href}>
+                <a key={link.label} href={link.href} target="_blank" rel="noreferrer">
                   {link.label}
                 </a>
               ))}
@@ -401,6 +708,115 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {selectedJob && (
+        <div className="job-modal-overlay" onClick={closeJobModal} role="presentation">
+          <section
+            className="job-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Job detail"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="modal-close" onClick={closeJobModal} aria-label="Dong">
+              x
+            </button>
+
+            <div className="job-modal-header">
+              <span className="badge">{selectedJob.typeLabel}</span>
+              <h3>{selectedJob.title}</h3>
+              <p>
+                {selectedJob.company} | {selectedJob.location} - {selectedJob.district}
+              </p>
+              <strong>{selectedJob.salaryLabel}</strong>
+            </div>
+
+            <div className="job-modal-grid">
+              <div className="job-modal-content">
+                <article>
+                  <h4>Mo ta cong viec</h4>
+                  <p>{selectedJob.summary}</p>
+                </article>
+
+                <article>
+                  <h4>Yeu cau</h4>
+                  <ul>
+                    {selectedJob.requirements.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+
+                <article>
+                  <h4>Quyen loi</h4>
+                  <ul>
+                    {selectedJob.benefits.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+              </div>
+
+              <form id="quick-apply" className="apply-form" onSubmit={handleSubmitApplication}>
+                <h4>Ung tuyen nhanh</h4>
+                <p>Nhap thong tin de gui ho so den bo phan tuyen dung.</p>
+
+                <label htmlFor="fullName">Ho va ten *</label>
+                <input
+                  id="fullName"
+                  type="text"
+                  value={applyForm.fullName}
+                  onChange={(event) => setApplyForm((prev) => ({ ...prev, fullName: event.target.value }))}
+                  required
+                />
+
+                <label htmlFor="email">Email *</label>
+                <input
+                  id="email"
+                  type="email"
+                  value={applyForm.email}
+                  onChange={(event) => setApplyForm((prev) => ({ ...prev, email: event.target.value }))}
+                  required
+                />
+
+                <label htmlFor="phone">So dien thoai *</label>
+                <input
+                  id="phone"
+                  type="tel"
+                  value={applyForm.phone}
+                  onChange={(event) => setApplyForm((prev) => ({ ...prev, phone: event.target.value }))}
+                  required
+                />
+
+                <label htmlFor="cvLink">Link CV</label>
+                <input
+                  id="cvLink"
+                  type="url"
+                  placeholder="https://"
+                  value={applyForm.cvLink}
+                  onChange={(event) => setApplyForm((prev) => ({ ...prev, cvLink: event.target.value }))}
+                />
+
+                <label htmlFor="message">Ghi chu them</label>
+                <textarea
+                  id="message"
+                  rows="4"
+                  value={applyForm.message}
+                  onChange={(event) => setApplyForm((prev) => ({ ...prev, message: event.target.value }))}
+                />
+
+                <button type="submit" className="btn btn-primary" disabled={applying}>
+                  {applying ? 'Dang gui...' : 'Gui ho so'}
+                </button>
+
+                {applyFeedback.message && (
+                  <p className={`apply-feedback ${applyFeedback.type}`}>{applyFeedback.message}</p>
+                )}
+              </form>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
