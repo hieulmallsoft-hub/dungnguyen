@@ -1,6 +1,9 @@
 node_modules/
 dist/
+.env
+*.tsbuildinfo
 client/node_modules/
 client/dist/
 server/node_modules/
 _source/
+server/*.log
