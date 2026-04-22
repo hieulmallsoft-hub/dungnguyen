@@ -100,6 +100,16 @@ body.home-page.modal-open {
   box-shadow: var(--shadow-soft);
 }
 
+.public-home .brand-logo {
+  display: block;
+  width: 190px;
+  height: 58px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
 .public-home .brand strong {
   display: block;
   font-family: 'Space Grotesk', sans-serif;
@@ -215,6 +225,24 @@ body.home-page.modal-open {
 .public-home .hero-media img {
   object-fit: cover;
   object-position: center;
+}
+
+.public-home .hero-brand-banner .hero-media {
+  width: min(1200px, calc(100% - 32px));
+  min-height: 0;
+  aspect-ratio: 795 / 283;
+  margin: 0 auto;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.public-home .hero-brand-banner .hero-media img {
+  object-fit: contain;
+  background: #ffffff;
+}
+
+.public-home .hero-brand-banner .metrics-grid {
+  margin-top: 16px;
 }
 
 .public-home .hero-overlay {
@@ -611,6 +639,17 @@ body.home-page.modal-open {
   min-height: 96px;
   padding: 10px 12px;
   resize: vertical;
+}
+
+.public-home .apply-form input[type='file'] {
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.public-home .file-hint {
+  margin-top: -3px;
+  font-size: 12px;
+  color: #856166;
 }
 
 .public-home .field-group input:focus,
@@ -2665,6 +2704,15 @@ body.home-page.modal-open {
 
 @media (max-width: 767px) {
   .public-home .container {
+    width: min(1200px, calc(100% - 20px));
+  }
+
+  .public-home .brand-logo {
+    width: 168px;
+    height: 52px;
+  }
+
+  .public-home .hero-brand-banner .hero-media {
     width: min(1200px, calc(100% - 20px));
   }
 

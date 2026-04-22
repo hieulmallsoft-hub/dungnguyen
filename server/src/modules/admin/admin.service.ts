@@ -162,7 +162,11 @@ export class AdminService {
       score: Math.min(98, 55 + application.candidate.experienceYears * 10 + (application.resumeId ? 10 : 0)),
       source: this.translateSource(application.source),
       submittedAt: application.appliedAt,
-      owner: translateDemoText(application.job.createdBy.fullName)
+      owner: translateDemoText(application.job.createdBy.fullName),
+      resumeName: application.resume?.fileName || '',
+      resumeUrl: this.normalizeResumeUrl(application.resume?.fileUrl || ''),
+      candidateEmail: application.candidate.user.email,
+      candidatePhone: application.candidate.user.phone || ''
     }));
 
     return { items, total: items.length };
@@ -353,6 +357,18 @@ export class AdminService {
     };
 
     return map[action] || action.replace(/\./g, ' ');
+  }
+
+  private normalizeResumeUrl(fileUrl: string) {
+    if (fileUrl.startsWith('https://example.com/')) {
+      return '';
+    }
+
+    if (fileUrl.startsWith('/api/uploads/')) {
+      return fileUrl.replace('/api', '');
+    }
+
+    return fileUrl;
   }
 
   private translateEntityType(entityType: string) {

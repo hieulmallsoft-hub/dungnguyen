@@ -1,3 +1,4 @@
+import { apiUrl } from './apiBase';
 import { clearAuthSession, getAccessToken } from './authStorage';
 
 const readErrorMessage = async (response) => {
@@ -11,7 +12,7 @@ const readErrorMessage = async (response) => {
 
 export const fetchAdminResource = async (resource, { signal } = {}) => {
   const token = getAccessToken();
-  const response = await fetch(`/api/admin/${resource}`, {
+  const response = await fetch(apiUrl(`/api/admin/${resource}`), {
     signal,
     headers: token
       ? {

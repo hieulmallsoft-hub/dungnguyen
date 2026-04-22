@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { apiUrl } from '../../data/apiBase';
 import { clearAuthSession, getAuthSession, isAdminSession, setAuthSession } from '../../data/authStorage';
 
 function AdminLoginPage() {
@@ -25,7 +26,7 @@ function AdminLoginPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

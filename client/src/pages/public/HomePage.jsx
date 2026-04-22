@@ -1,5 +1,6 @@
 import '../../App.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { apiUrl } from '../../data/apiBase';
 
 const EMPTY_FILTERS = {
   keyword: '',
@@ -13,7 +14,7 @@ const EMPTY_FORM = {
   fullName: '',
   email: '',
   phone: '',
-  cvLink: '',
+  cvFile: null,
   message: ''
 };
 
@@ -711,12 +712,12 @@ function Header({ homeData }) {
   return (
     <header className="topbar">
       <div className="container topbar-inner">
-        <a className="brand" href="#">
-          <span className="brand-mark">V3M</span>
-          <div>
-            <strong>{homeData.brand.name}</strong>
-            <p>{homeData.brand.subtitle}</p>
-          </div>
+        <a className="brand" href="#" aria-label={homeData.brand.logoAlt || homeData.brand.name}>
+          <img
+            className="brand-logo"
+            src={homeData.brand.logoUrl || '/logo-shg.jpg'}
+            alt={homeData.brand.logoAlt || homeData.brand.name}
+          />
         </a>
 
         <nav className="top-nav">
@@ -742,86 +743,89 @@ function Header({ homeData }) {
 
 function Hero({ homeData, activeBanner, onChangeBanner, quickSuggestions, spotlightCompanies, onQuickSearch }) {
   const banner = homeData.heroBanners[activeBanner] ?? homeData.heroBanners[0];
+  const isImageOnlyBanner = banner.displayMode === 'image-only';
 
   return (
-    <section className="hero">
+    <section className={`hero${isImageOnlyBanner ? ' hero-brand-banner' : ''}`}>
       <div className="hero-media">
         <picture>
           <source media="(max-width: 768px)" srcSet={banner.imageMobile} />
-          <img src={banner.imageDesktop} alt={banner.title} />
+          <img src={banner.imageDesktop} alt={banner.imageAlt || banner.title} />
         </picture>
-        <div className="hero-overlay" />
+        {!isImageOnlyBanner && <div className="hero-overlay" />}
       </div>
 
-      <div className="container hero-content">
-        <div className="hero-copy">
-          <p className="hero-kicker">Nền tảng tìm việc thân thiện</p>
-          <h1>{banner.title}</h1>
-          <p className="hero-description">{banner.description}</p>
+      {!isImageOnlyBanner && (
+        <div className="container hero-content">
+          <div className="hero-copy">
+            <p className="hero-kicker">Nền tảng tìm việc thân thiện</p>
+            <h1>{banner.title}</h1>
+            <p className="hero-description">{banner.description}</p>
 
-          {quickSuggestions.length > 0 && (
-            <div className="hero-quick-picks">
-              <span>Gợi ý tìm nhanh hôm nay</span>
-              
-              <div className="hero-chip-row">
-                {quickSuggestions.map((item) => (
-                  <button key={item.label} type="button" className="hero-suggestion" onClick={() => onQuickSearch(item)}>
-                    {item.label}
-                  </button>
-                ))}
+            {quickSuggestions.length > 0 && (
+              <div className="hero-quick-picks">
+                <span>Gợi ý tìm nhanh hôm nay</span>
+
+                <div className="hero-chip-row">
+                  {quickSuggestions.map((item) => (
+                    <button key={item.label} type="button" className="hero-suggestion" onClick={() => onQuickSearch(item)}>
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+            )}
+
+            <div className="hero-cta">
+              <a className="btn btn-primary" href={banner.ctaPrimary.href}>
+                {banner.ctaPrimary.label}
+              </a>
+              <a className="btn btn-secondary" href={banner.ctaSecondary.href}>
+                {banner.ctaSecondary.label}
+              </a>
             </div>
-          )}
 
-          <div className="hero-cta">
-            <a className="btn btn-primary" href={banner.ctaPrimary.href}>
-              {banner.ctaPrimary.label}
-            </a>
-            <a className="btn btn-secondary" href={banner.ctaSecondary.href}>
-              {banner.ctaSecondary.label}
-            </a>
+            <div className="hero-dots" aria-label="Bộ chuyển banner">
+              {homeData.heroBanners.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={index === activeBanner ? 'active' : ''}
+                  onClick={() => onChangeBanner(index)}
+                  aria-label={`Chuyển banner ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
 
-          <div className="hero-dots" aria-label="Bộ chuyển banner">
-            {homeData.heroBanners.map((item, index) => (
-              <button
-                key={item.id}
-                type="button"
-                className={index === activeBanner ? 'active' : ''}
-                onClick={() => onChangeBanner(index)}
-                aria-label={`Chuyển banner ${index + 1}`}
-              />
-            ))}
-          </div>
+          <aside className="hero-sidecard">
+            <p className="hero-card-kicker">Bắt đầu dễ dàng hơn</p>
+            <h3>Mọi thứ được sắp xếp để bạn dễ ra quyết định</h3>
+
+            <div className="hero-card-list">
+              {HERO_SUPPORT_ITEMS.map((item) => (
+                <article key={item.title} className="hero-card-item">
+                  <strong>{item.title}</strong>
+                  <p>{item.description}</p>
+                </article>
+              ))}
+            </div>
+
+            {spotlightCompanies.length > 0 && (
+              <div className="hero-company-strip">
+                <div className="hero-avatar-group" aria-hidden="true">
+                  {spotlightCompanies.map((company) => (
+                    <span key={company.id} className="hero-avatar">
+                      {getInitials(company.name)}
+                    </span>
+                  ))}
+                </div>
+                <p>Doanh nghiệp nổi bật đang tuyển và phản hồi nhanh trên nền tảng.</p>
+              </div>
+            )}
+          </aside>
         </div>
-
-        <aside className="hero-sidecard">
-          <p className="hero-card-kicker">Bắt đầu dễ dàng hơn</p>
-          <h3>Mọi thứ được sắp xếp để bạn dễ ra quyết định</h3>
-
-          <div className="hero-card-list">
-            {HERO_SUPPORT_ITEMS.map((item) => (
-              <article key={item.title} className="hero-card-item">
-                <strong>{item.title}</strong>
-                <p>{item.description}</p>
-              </article>
-            ))}
-          </div>
-
-          {spotlightCompanies.length > 0 && (
-            <div className="hero-company-strip">
-              <div className="hero-avatar-group" aria-hidden="true">
-                {spotlightCompanies.map((company) => (
-                  <span key={company.id} className="hero-avatar">
-                    {getInitials(company.name)}
-                  </span>
-                ))}
-              </div>
-              <p>Doanh nghiệp nổi bật đang tuyển và phản hồi nhanh trên nền tảng.</p>
-            </div>
-          )}
-        </aside>
-      </div>
+      )}
 
       <div className="container metrics-grid">
         {homeData.quickStats.map((item) => (
@@ -1801,6 +1805,7 @@ function HomePage() {
   const [applyForm, setApplyForm] = useState(EMPTY_FORM);
   const [applying, setApplying] = useState(false);
   const [applyFeedback, setApplyFeedback] = useState({ type: '', message: '' });
+  const cvFileInputRef = useRef(null);
 
   useEffect(() => {
     document.body.classList.add('home-page');
@@ -1819,7 +1824,7 @@ function HomePage() {
       setLoadingError('');
 
       try {
-        const response = await fetch('/api/home-data');
+        const response = await fetch(apiUrl('/api/home-data'));
         if (!response.ok) {
           throw new Error('Không thể tải dữ liệu trang chủ');
         }
@@ -1880,7 +1885,7 @@ function HomePage() {
           }
         });
 
-        const response = await fetch(`/api/jobs?${params.toString()}`, {
+        const response = await fetch(apiUrl(`/api/jobs?${params.toString()}`), {
           signal: controller.signal
         });
 
@@ -2267,15 +2272,20 @@ function HomePage() {
     setApplyFeedback({ type: '', message: '' });
 
     try {
-      const response = await fetch('/api/applications', {
+      const formData = new FormData();
+      formData.append('jobId', selectedJob.id);
+      formData.append('fullName', applyForm.fullName);
+      formData.append('email', applyForm.email);
+      formData.append('phone', applyForm.phone);
+      formData.append('message', applyForm.message);
+
+      if (applyForm.cvFile) {
+        formData.append('cvFile', applyForm.cvFile);
+      }
+
+      const response = await fetch(apiUrl('/api/applications'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...applyForm,
-          jobId: selectedJob.id
-        })
+        body: formData
       });
 
       const payload = await response.json();
@@ -2285,6 +2295,9 @@ function HomePage() {
       }
 
       setApplyForm(EMPTY_FORM);
+      if (cvFileInputRef.current) {
+        cvFileInputRef.current.value = '';
+      }
       setApplyFeedback({
         type: 'success',
         message: payload.message || 'Ứng tuyển thành công.'
@@ -2773,14 +2786,17 @@ function HomePage() {
                   required
                 />
 
-                <label htmlFor="cvLink">Liên kết CV</label>
+                <label htmlFor="cvFile">Tải CV từ máy tính</label>
                 <input
-                  id="cvLink"
-                  type="url"
-                  placeholder="https://"
-                  value={applyForm.cvLink}
-                  onChange={(event) => setApplyForm((prev) => ({ ...prev, cvLink: event.target.value }))}
+                  ref={cvFileInputRef}
+                  id="cvFile"
+                  type="file"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={(event) => setApplyForm((prev) => ({ ...prev, cvFile: event.target.files?.[0] || null }))}
                 />
+                <p className="file-hint">
+                  {applyForm.cvFile ? `Đã chọn: ${applyForm.cvFile.name}` : 'Chọn file PDF, DOC hoặc DOCX từ máy tính.'}
+                </p>
 
                 <label htmlFor="message">Ghi chú thêm</label>
                 <textarea

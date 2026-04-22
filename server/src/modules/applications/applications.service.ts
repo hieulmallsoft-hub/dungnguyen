@@ -16,6 +16,13 @@ import {
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationStatusDto } from './dto/update-application-status.dto';
 
+type StoredCvFile = {
+  filename: string;
+  originalname: string;
+  mimetype: string;
+  size: number;
+};
+
 @Injectable()
 export class ApplicationsService {
   constructor(
@@ -28,7 +35,7 @@ export class ApplicationsService {
     @InjectRepository(AuditLogEntity) private readonly auditLogRepository: Repository<AuditLogEntity>
   ) {}
 
-  async create(payload: CreateApplicationDto) {
+  async create(payload: CreateApplicationDto, cvFile?: StoredCvFile) {
     const job = await this.jobRepository.findOne({ where: { id: payload.jobId } });
     if (!job) {
       throw new NotFoundException('Không tìm thấy việc làm.');
@@ -76,7 +83,18 @@ export class ApplicationsService {
     }
 
     let resumeId: string | null = null;
-    if (payload.cvLink) {
+    if (cvFile) {
+      const resume = await this.resumeRepository.save(
+        this.resumeRepository.create({
+          candidateId: candidate.id,
+          fileUrl: `/uploads/cv/${cvFile.filename}`,
+          fileName: cvFile.originalname || cvFile.filename,
+          isDefault: true,
+          createdAt: new Date()
+        })
+      );
+      resumeId = resume.id;
+    } else if (payload.cvLink) {
       const resume = await this.resumeRepository.save(
         this.resumeRepository.create({
           candidateId: candidate.id,

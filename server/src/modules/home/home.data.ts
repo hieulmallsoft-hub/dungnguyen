@@ -1,5 +1,7 @@
 export const STATIC_HOME_DATA = {
   brand: {
+    logoUrl: '/logo-shg.jpg',
+    logoAlt: 'SHG Investment',
     name: 'Việc 3 Miền',
     subtitle: 'Nền tảng tuyển dụng cho khối sản xuất, hậu cần và kỹ thuật trên toàn quốc.',
     hotline: '0812 533 533',
@@ -20,19 +22,23 @@ export const STATIC_HOME_DATA = {
   heroBanners: [
     {
       id: 'hero-1',
+      displayMode: 'image-only',
       title: 'Tuyển dụng hiệu quả cho khối sản xuất',
       description: 'Tập trung việc làm chất lượng, thông tin rõ ràng và luồng ứng tuyển nhanh trong một giao diện duy nhất.',
-      imageDesktop: 'https://images.unsplash.com/photo-1573164574572-cb89e39749b4?auto=format&fit=crop&w=1800&q=80',
-      imageMobile: 'https://images.unsplash.com/photo-1573164574230-db1d5e960238?auto=format&fit=crop&w=900&q=80',
+      imageDesktop: '/banner-shg.jpg',
+      imageMobile: '/banner-shg.jpg',
+      imageAlt: 'Công ty Cổ phần Quốc tế SHG',
       ctaPrimary: { label: 'Tìm việc ngay', href: '#jobs' },
       ctaSecondary: { label: 'Tạo hồ sơ ứng viên', href: '#jobs' }
     },
     {
       id: 'hero-2',
+      displayMode: 'image-only',
       title: 'Tối ưu chi phí tuyển dụng cho doanh nghiệp',
       description: 'Lọc ứng viên theo khu vực và kỹ năng, kết hợp bảng điều hành vận hành để quản trị chất lượng tin đăng.',
-      imageDesktop: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1800&q=80',
-      imageMobile: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80',
+      imageDesktop: '/banner-shg.jpg',
+      imageMobile: '/banner-shg.jpg',
+      imageAlt: 'Công ty Cổ phần Quốc tế SHG',
       ctaPrimary: { label: 'Đăng tin tuyển dụng', href: '#services' },
       ctaSecondary: { label: 'Xem doanh nghiệp', href: '#companies' }
     }
