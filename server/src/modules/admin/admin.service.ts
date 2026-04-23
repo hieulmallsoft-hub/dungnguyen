@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -15,7 +15,10 @@ import {
   UserEntity
 } from '../../database/entities';
 import { ApplicationStatus, JobStatus } from '../../common/enums/domain.enums';
+import { AuthUserPayload } from '../../common/auth/current-user.decorator';
 import { translateDemoList, translateDemoText } from '../../common/utils/demo-translation';
+import { AdminUpsertJobDto } from './dto/admin-upsert-job.dto';
+import { AdminUpdateJobDto } from './dto/admin-update-job.dto';
 
 @Injectable()
 export class AdminService {
@@ -33,29 +36,45 @@ export class AdminService {
     @InjectRepository(AuditLogEntity) private readonly auditLogRepository: Repository<AuditLogEntity>
   ) {}
 
-  async getDashboard() {
-    const [users, companies, jobs, applications, reports, auditLogs] = await Promise.all([
+  async getDashboard(query?: { from?: string; to?: string; granularity?: string; companyId?: string; categoryId?: string }) {
+    const companyId = query?.companyId;
+    const categoryId = query?.categoryId;
+
+    const [users, companies, jobs, applications, reports, auditLogs, jobCategories] = await Promise.all([
       this.userRepository.find({ order: { createdAt: 'ASC' } }),
       this.companyRepository.find({ order: { createdAt: 'ASC' } }),
-      this.jobRepository.find({ order: { createdAt: 'ASC' } }),
-      this.applicationRepository.find({ order: { appliedAt: 'ASC' } }),
+      this.jobRepository.find({ order: { createdAt: 'ASC' }, relations: ['company'] }),
+      this.applicationRepository.find({ order: { appliedAt: 'ASC' }, relations: ['job', 'job.company'] }),
       this.reportRepository.find({ order: { createdAt: 'DESC' } }),
-      this.auditLogRepository.find({ order: { createdAt: 'DESC' } })
+      this.auditLogRepository.find({ order: { createdAt: 'DESC' } }),
+      this.jobCategoryRepository.find({ relations: ['category'] })
     ]);
+
+    const jobCategoryMap = new Map(jobCategories.map(jc => [jc.jobId, jc.categoryId]));
+
+    const filteredJobs = jobs.filter(j => 
+       (!companyId || j.companyId === companyId) && 
+       (!categoryId || jobCategoryMap.get(j.id) === categoryId)
+    );
+
+    const filteredApplications = applications.filter(a => 
+      (!companyId || a.job?.companyId === companyId) && 
+      (!categoryId || jobCategoryMap.get(a.jobId) === categoryId)
+    );
 
     const metrics = [
       { id: 'users', label: 'Tổng người dùng', value: users.length, change: this.percent(users.filter((item) => item.status === 'active').length, users.length || 1), trend: 'up', tone: 'slate' },
       { id: 'companies', label: 'Doanh nghiệp hoạt động', value: companies.filter((item) => item.status === 'verified').length, change: this.percent(companies.filter((item) => item.plan === 'Enterprise').length, companies.length || 1), trend: 'up', tone: 'emerald' },
-      { id: 'jobs', label: 'Việc làm đang hiển thị', value: jobs.filter((item) => item.status === JobStatus.PUBLISHED).length, change: this.percent(jobs.filter((item) => item.urgent).length, jobs.length || 1), trend: 'up', tone: 'amber' },
-      { id: 'applications', label: 'Hồ sơ đang chờ', value: applications.filter((item) => item.status === ApplicationStatus.APPLIED || item.status === ApplicationStatus.REVIEWING).length, change: -1.8, trend: 'down', tone: 'rose' }
+      { id: 'jobs', label: 'Việc làm đang hiển thị', value: filteredJobs.filter((item) => item.status === JobStatus.PUBLISHED).length, change: this.percent(filteredJobs.filter((item) => item.urgent).length, filteredJobs.length || 1), trend: 'up', tone: 'amber' },
+      { id: 'applications', label: 'Hồ sơ đang chờ', value: filteredApplications.filter((item) => item.status === ApplicationStatus.APPLIED || item.status === ApplicationStatus.REVIEWING).length, change: -1.8, trend: 'down', tone: 'rose' }
     ];
 
     return {
       metrics,
-      applicationTrend: this.buildTrend(users, jobs, applications),
-      hiringFunnel: this.buildFunnel(applications),
-      sourceMix: this.buildSourceMix(applications),
-      operationalAlerts: this.buildAlerts(companies, jobs, reports),
+      applicationTrend: this.buildTrend(users, filteredJobs, filteredApplications, query),
+      hiringFunnel: this.buildFunnel(filteredApplications),
+      sourceMix: this.buildSourceMix(filteredApplications),
+      operationalAlerts: this.buildAlerts(companies, filteredJobs, reports),
       activityFeed: auditLogs.slice(0, 4).map((log) => ({
         id: log.id,
         actor: log.user?.fullName || 'Hệ thống',
@@ -68,7 +87,7 @@ export class AdminService {
         { id: 'health-first-response', label: 'Thời gian phản hồi đầu tiên', value: 6.4, hint: 'Số giờ từ lúc ứng tuyển đến khi người phụ trách tuyển dụng bắt đầu xem xét trong bộ dữ liệu hiện tại.', status: 'healthy' },
         { id: 'health-fraud-resolved', label: 'Báo cáo gian lận đã xử lý', value: reports.filter((item) => item.status === 'resolved').length, hint: 'Các báo cáo tin cậy và an toàn đã được đội vận hành đóng lại.', status: 'healthy' }
       ],
-      dataSource: 'postgresql://postgres@localhost:5432/viec3mien_admin'
+      dataSource: 'postgresql://postgres@localhost:5432/shginvestment_admin'
     };
   }
 
@@ -137,11 +156,12 @@ export class AdminService {
       id: job.id,
       title: translateDemoText(job.title),
       company: translateDemoText(job.company.name),
+      companyId: job.companyId,
       category: translateDemoText(categoryByJobId.get(job.id) || 'Chưa phân loại'),
       location: `${translateDemoText(job.location)}${job.district ? ` - ${translateDemoText(job.district)}` : ''}`,
       type: this.translateJobType(job.jobType),
       salary: this.formatSalary(job.salaryMin, job.salaryMax),
-      status: job.status === 'published' ? 'live' : job.status,
+      status: job.status,
       applications: applications.filter((application) => application.jobId === job.id).length,
       qualityScore: job.qualityScore,
       postedAt: job.createdAt,
@@ -149,6 +169,156 @@ export class AdminService {
     }));
 
     return { items, total: items.length };
+  }
+
+  async getJobById(id: string) {
+    const job = await this.jobRepository.findOne({ where: { id } });
+    if (!job) {
+      throw new NotFoundException('Không tìm thấy việc làm.');
+    }
+
+    const categoryLink = await this.jobCategoryRepository.findOne({ where: { jobId: job.id } });
+
+    return {
+      id: job.id,
+      companyId: job.companyId,
+      categoryId: categoryLink?.categoryId || '',
+      title: translateDemoText(job.title),
+      description: translateDemoText(job.description),
+      requirements: translateDemoList(job.requirements),
+      benefits: translateDemoList(job.benefits),
+      salaryMin: job.salaryMin,
+      salaryMax: job.salaryMax,
+      currency: job.currency,
+      location: translateDemoText(job.location),
+      district: translateDemoText(job.district),
+      jobType: job.jobType,
+      experienceLevel: job.experienceLevel,
+      quantity: job.quantity,
+      deadline: job.deadline,
+      status: job.status,
+      urgent: job.urgent,
+      shift: translateDemoText(job.shift),
+      tags: translateDemoList(job.tags),
+      createdAt: job.createdAt,
+      updatedAt: job.updatedAt
+    };
+  }
+
+  async createJob(payload: AdminUpsertJobDto, user: AuthUserPayload) {
+    const company = await this.companyRepository.findOne({ where: { id: payload.companyId } });
+    if (!company) {
+      throw new NotFoundException('Không tìm thấy doanh nghiệp.');
+    }
+
+    const entity = this.jobRepository.create({
+      companyId: payload.companyId,
+      title: payload.title,
+      description: payload.description,
+      requirements: payload.requirements || [],
+      benefits: payload.benefits || [],
+      salaryMin: payload.salaryMin ?? null,
+      salaryMax: payload.salaryMax ?? null,
+      currency: payload.currency || 'VND',
+      location: payload.location,
+      district: payload.district ?? null,
+      jobType: payload.jobType,
+      experienceLevel: payload.experienceLevel,
+      quantity: payload.quantity,
+      deadline: payload.deadline ? new Date(payload.deadline) : null,
+      status: payload.status || JobStatus.DRAFT,
+      urgent: payload.urgent || false,
+      shift: payload.shift ?? null,
+      tags: payload.tags || [],
+      createdById: user.sub,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    const saved = await this.jobRepository.save(entity);
+    await this.upsertJobCategory(saved.id, payload.categoryId);
+
+    return this.getJobById(saved.id);
+  }
+
+  async updateJob(id: string, payload: AdminUpdateJobDto) {
+    const job = await this.jobRepository.findOne({ where: { id } });
+    if (!job) {
+      throw new NotFoundException('Không tìm thấy việc làm.');
+    }
+
+    if (payload.companyId) {
+      const company = await this.companyRepository.findOne({ where: { id: payload.companyId } });
+      if (!company) {
+        throw new NotFoundException('Không tìm thấy doanh nghiệp.');
+      }
+      job.companyId = payload.companyId;
+    }
+
+    if (typeof payload.title === 'string') job.title = payload.title;
+    if (typeof payload.description === 'string') job.description = payload.description;
+    if (Array.isArray(payload.requirements)) job.requirements = payload.requirements;
+    if (Array.isArray(payload.benefits)) job.benefits = payload.benefits;
+    if (typeof payload.salaryMin === 'number') job.salaryMin = payload.salaryMin;
+    if (payload.salaryMin === null) job.salaryMin = null;
+    if (typeof payload.salaryMax === 'number') job.salaryMax = payload.salaryMax;
+    if (payload.salaryMax === null) job.salaryMax = null;
+    if (typeof payload.currency === 'string') job.currency = payload.currency;
+    if (typeof payload.location === 'string') job.location = payload.location;
+    if (typeof payload.district === 'string') job.district = payload.district;
+    if (payload.district === null) job.district = null;
+    if (payload.jobType) job.jobType = payload.jobType;
+    if (payload.experienceLevel) job.experienceLevel = payload.experienceLevel;
+    if (typeof payload.quantity === 'number') job.quantity = payload.quantity;
+    if (typeof payload.deadline === 'string') job.deadline = payload.deadline ? new Date(payload.deadline) : null;
+    if (payload.status) job.status = payload.status;
+    if (typeof payload.urgent === 'boolean') job.urgent = payload.urgent;
+    if (typeof payload.shift === 'string') job.shift = payload.shift;
+    if (payload.shift === null) job.shift = null;
+    if (Array.isArray(payload.tags)) job.tags = payload.tags;
+
+    job.updatedAt = new Date();
+    await this.jobRepository.save(job);
+
+    if (typeof payload.categoryId === 'string') {
+      await this.upsertJobCategory(job.id, payload.categoryId);
+    }
+
+    return this.getJobById(job.id);
+  }
+
+  async updateJobStatus(id: string, status: JobStatus) {
+    const job = await this.jobRepository.findOne({ where: { id } });
+    if (!job) {
+      throw new NotFoundException('Không tìm thấy việc làm.');
+    }
+
+    job.status = status;
+    job.updatedAt = new Date();
+    await this.jobRepository.save(job);
+
+    return this.getJobById(job.id);
+  }
+
+  private async upsertJobCategory(jobId: string, categoryId?: string) {
+    if (!categoryId) {
+      return;
+    }
+
+    const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
+    if (!category) {
+      throw new NotFoundException('Không tìm thấy danh mục.');
+    }
+
+    const existing = await this.jobCategoryRepository.findOne({ where: { jobId } });
+    if (existing) {
+      existing.categoryId = categoryId;
+      await this.jobCategoryRepository.save(existing);
+      return;
+    }
+
+    const link = this.jobCategoryRepository.create({ jobId, categoryId });
+    await this.jobCategoryRepository.save(link);
   }
 
   async listApplications() {
@@ -238,14 +408,73 @@ export class AdminService {
     return { items, total: items.length };
   }
 
-  private buildTrend(users: UserEntity[], jobs: JobEntity[], applications: ApplicationEntity[]) {
-    const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'];
-    return months.map((month, index) => ({
-      month,
-      users: users.filter((item) => item.createdAt.getMonth() === index).length,
-      jobs: jobs.filter((item) => item.createdAt.getMonth() === index).length,
-      applications: applications.filter((item) => item.appliedAt.getMonth() === index).length
-    }));
+  private buildTrend(users: UserEntity[], jobs: JobEntity[], applications: ApplicationEntity[], query?: { from?: string; to?: string; granularity?: string }) {
+    const granularity = query?.granularity || 'month';
+    const now = new Date();
+
+    const hasRange = Boolean(query?.from || query?.to);
+    let fromDate = query?.from ? new Date(query.from) : null;
+    let toDate = query?.to ? new Date(query.to) : null;
+
+    if (!toDate || Number.isNaN(toDate.getTime())) {
+      toDate = now;
+    }
+
+    if (!fromDate || Number.isNaN(fromDate.getTime())) {
+      if (hasRange) {
+        fromDate = new Date(toDate.getFullYear(), 0, 1);
+      } else if (granularity === 'day') {
+        fromDate = new Date(toDate.getTime() - 6 * 24 * 60 * 60 * 1000);
+      } else if (granularity === 'year') {
+        fromDate = new Date(toDate.getFullYear() - 4, 0, 1);
+      } else {
+        fromDate = new Date(toDate.getFullYear(), toDate.getMonth() - 5, 1);
+      }
+    }
+
+    fromDate.setHours(0, 0, 0, 0);
+    toDate.setHours(23, 59, 59, 999);
+
+    const points: any[] = [];
+    const current = new Date(fromDate);
+    current.setHours(0, 0, 0, 0);
+
+    while (current <= toDate) {
+      let label = '';
+      let start = new Date(current);
+      let end = new Date(current);
+
+      if (granularity === 'day') {
+        label = `${current.getDate()}/${current.getMonth() + 1}`;
+        end.setHours(23, 59, 59, 999);
+        current.setDate(current.getDate() + 1);
+      } else if (granularity === 'month') {
+        label = `T${current.getMonth() + 1}/${current.getFullYear()}`;
+        start.setDate(1);
+        start.setHours(0,0,0,0);
+        end.setMonth(current.getMonth() + 1, 0);
+        end.setHours(23, 59, 59, 999);
+        current.setMonth(current.getMonth() + 1, 1);
+      } else {
+        label = `${current.getFullYear()}`;
+        start.setMonth(0, 1);
+        start.setHours(0,0,0,0);
+        end.setMonth(11, 31);
+        end.setHours(23, 59, 59, 999);
+        current.setFullYear(current.getFullYear() + 1, 0, 1);
+      }
+
+      points.push({
+        month: label,
+        users: users.filter((item) => item.createdAt >= start && item.createdAt <= end).length,
+        jobs: jobs.filter((item) => item.createdAt >= start && item.createdAt <= end).length,
+        applications: applications.filter((item) => item.appliedAt >= start && item.appliedAt <= end).length
+      });
+
+      if (points.length > 500) break; // Safety break
+    }
+
+    return points;
   }
 
   private buildFunnel(applications: ApplicationEntity[]) {

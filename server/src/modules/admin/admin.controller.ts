@@ -1,9 +1,13 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { AuthUserPayload, CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { UserRole } from '../../common/enums/domain.enums';
 import { AdminService } from './admin.service';
+import { AdminUpsertJobDto } from './dto/admin-upsert-job.dto';
+import { AdminUpdateJobDto } from './dto/admin-update-job.dto';
+import { AdminUpdateJobStatusDto } from './dto/admin-update-job-status.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -12,8 +16,8 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('dashboard')
-  getDashboard() {
-    return this.adminService.getDashboard();
+  getDashboard(@Query() query: { from?: string; to?: string; granularity?: string }) {
+    return this.adminService.getDashboard(query);
   }
 
   @Get('users')
@@ -29,6 +33,26 @@ export class AdminController {
   @Get('jobs')
   getJobs() {
     return this.adminService.listJobs();
+  }
+
+  @Get('jobs/:id')
+  getJob(@Param('id') id: string) {
+    return this.adminService.getJobById(id);
+  }
+
+  @Post('jobs')
+  createJob(@Body() payload: AdminUpsertJobDto, @CurrentUser() user: AuthUserPayload) {
+    return this.adminService.createJob(payload, user);
+  }
+
+  @Patch('jobs/:id')
+  updateJob(@Param('id') id: string, @Body() payload: AdminUpdateJobDto) {
+    return this.adminService.updateJob(id, payload);
+  }
+
+  @Patch('jobs/:id/status')
+  updateJobStatus(@Param('id') id: string, @Body() payload: AdminUpdateJobStatusDto) {
+    return this.adminService.updateJobStatus(id, payload.status);
   }
 
   @Get('applications')

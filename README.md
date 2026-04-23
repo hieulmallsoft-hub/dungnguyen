@@ -1,6 +1,6 @@
-﻿# Viec3mien Home - ReactJS + NodeJS
+﻿# shginvestment Home - ReactJS + NodeJS
 
-Giao diện trang home cho `viec3mien.vn` được dựng lại bằng:
+Giao diện trang home cho `shginvestment.vn` được dựng lại bằng:
 - Frontend: React + Vite
 - Backend: Node.js + Express
 

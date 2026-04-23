@@ -10,9 +10,13 @@ const CompaniesPage = lazy(() => import('./pages/admin/CompaniesPage'));
 const JobsPage = lazy(() => import('./pages/admin/JobsPage'));
 const ApplicationsPage = lazy(() => import('./pages/admin/ApplicationsPage'));
 const ReportsPage = lazy(() => import('./pages/admin/ReportsPage'));
-const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'));
-const AuditLogsPage = lazy(() => import('./pages/admin/AuditLogsPage'));
-const HomePage = lazy(() => import('./pages/public/HomePage'));
+  const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'));
+  const AuditLogsPage = lazy(() => import('./pages/admin/AuditLogsPage'));
+  const HomePage = lazy(() => import('./pages/public/HomePage'));
+  const JobsOnlyPage = lazy(() => import('./pages/public/JobsOnlyPage'));
+  const CvOnlyPage = lazy(() => import('./pages/public/CvOnlyPage'));
+  const NewsOnlyPage = lazy(() => import('./pages/public/NewsOnlyPage'));
+  const JobDetailPage = lazy(() => import('./pages/public/JobDetailPage'));
 
 function App() {
   return (
@@ -20,6 +24,11 @@ function App() {
       <Suspense fallback={<div className="grid min-h-screen place-items-center bg-sand-50 text-sm font-semibold text-slate-500">Đang tải giao diện...</div>}>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/viec-lam" element={<JobsOnlyPage />} />
+          <Route path="/viec-lam/:slug/:id" element={<JobDetailPage />} />
+          <Route path="/cv-mau" element={<CvOnlyPage />} />
+          <Route path="/tin-tuc" element={<NewsOnlyPage />} />
+          <Route path="/jobs" element={<Navigate to="/viec-lam" replace />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route
             path="/admin"

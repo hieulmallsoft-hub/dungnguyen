@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import AdminIcon from './AdminIcon';
 import { cn, formatCompactNumber, formatPercent } from '../../data/adminHelpers';
 
@@ -5,7 +6,12 @@ function StatCard({ item }) {
   const isPositive = item.trend !== 'down';
 
   return (
-    <article className="admin-card p-5 sm:p-6">
+    <motion.article 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -5, transition: { duration: 0.2 } }}
+      className="admin-card p-5 sm:p-6"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-slate-500">{item.label}</p>
@@ -22,7 +28,7 @@ function StatCard({ item }) {
         </span>
         <span className="text-slate-400">so với tháng trước</span>
       </div>
-    </article>
+    </motion.article>
   );
 }
 

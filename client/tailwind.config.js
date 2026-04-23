@@ -4,6 +4,8 @@ export default {
   theme: {
     extend: {
       colors: {
+        'cv-red': '#c41e3a',
+        'cv-gold': '#d4af37',
         ember: {
           50: '#fff5f4',
           100: '#ffe5e2',
@@ -34,7 +36,7 @@ export default {
       },
       boxShadow: {
         panel: '0 20px 50px rgba(20, 24, 33, 0.10)',
-        glow: '0 18px 40px rgba(242, 77, 54, 0.18)'
+        glow: '0 18px 40px rgba(212, 175, 55, 0.22)'
       },
       backgroundImage: {
         'admin-grid':

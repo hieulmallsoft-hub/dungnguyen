@@ -2,19 +2,20 @@ export const STATIC_HOME_DATA = {
   brand: {
     logoUrl: '/logo-shg.jpg',
     logoAlt: 'SHG Investment',
-    name: 'Việc 3 Miền',
-    subtitle: 'Nền tảng tuyển dụng cho khối sản xuất, hậu cần và kỹ thuật trên toàn quốc.',
+    name: 'SHG INVESTMENT',
+    subtitle: 'Nền tảng tuyển dụng cho lĩnh vực bất động sản, môi giới và quản lý dự án trên toàn quốc.',
     hotline: '0812 533 533',
-    email: 'support@viec3mien.vn',
+    email: 'support@SHGINVESTMENT.vn',
     socialLinks: [
-      { label: 'Facebook', href: 'https://www.facebook.com/viec3mientuyendung' },
-      { label: 'Zalo', href: 'https://zalo.me/viec3mientuyendung' },
-      { label: 'TikTok', href: 'https://www.tiktok.com/@viec3mientuyendung1' }
+      { label: 'Facebook', href: 'https://www.facebook.com/SHGINVESTMENTtuyendung' },
+      { label: 'Zalo', href: 'https://zalo.me/SHGINVESTMENTtuyendung' },
+      { label: 'TikTok', href: 'https://www.tiktok.com/@SHGINVESTMENTtuyendung1' }
     ]
   },
   nav: [
-    { label: 'Việc làm', href: '#jobs' },
-    { label: 'CV mẫu', href: '#cv-mau' },
+    { label: 'Việc làm', href: '/viec-lam' },
+    { label: 'CV mẫu', href: '/cv-mau' },
+    { label: 'Tin tức', href: '/tin-tuc' },
     { label: 'Doanh nghiệp', href: '#companies' },
     { label: 'Quy trình', href: '#journey' },
     { label: 'Dịch vụ', href: '#services' }
@@ -23,13 +24,13 @@ export const STATIC_HOME_DATA = {
     {
       id: 'hero-1',
       displayMode: 'image-only',
-      title: 'Tuyển dụng hiệu quả cho khối sản xuất',
+      title: 'Tuyển dụng hiệu quả cho lĩnh vực bất động sản',
       description: 'Tập trung việc làm chất lượng, thông tin rõ ràng và luồng ứng tuyển nhanh trong một giao diện duy nhất.',
       imageDesktop: '/banner-shg.jpg',
       imageMobile: '/banner-shg.jpg',
       imageAlt: 'Công ty Cổ phần Quốc tế SHG',
-      ctaPrimary: { label: 'Tìm việc ngay', href: '#jobs' },
-      ctaSecondary: { label: 'Tạo hồ sơ ứng viên', href: '#jobs' }
+      ctaPrimary: { label: 'Tìm việc ngay', href: '/viec-lam' },
+      ctaSecondary: { label: 'Tạo CV ứng tuyển', href: '/cv-mau' }
     },
     {
       id: 'hero-2',
@@ -44,7 +45,7 @@ export const STATIC_HOME_DATA = {
     }
   ],
   testimonials: [
-    { id: 'ts-1', author: 'Trần Bảo Châu, Quản trị nền tảng', quote: 'Việc 3 Miền giúp đội vận hành theo dõi chất lượng tin đăng, cam kết phản hồi từ doanh nghiệp và tiến trình ứng viên trong một nơi duy nhất.' },
+    { id: 'ts-1', author: 'Trần Bảo Châu, Quản trị nền tảng', quote: 'SHG INVESTMENT giúp đội vận hành theo dõi chất lượng tin đăng, cam kết phản hồi từ doanh nghiệp và tiến trình ứng viên trong một nơi duy nhất.' },
     { id: 'ts-2', author: 'Phạm Thu Linh, Trưởng phòng nhân sự', quote: 'Bảng điều khiển quản trị rõ ràng, đội nhân sự có thể lọc hồ sơ nhanh và xem lịch sử thay đổi tin đăng để ra quyết định tốt hơn.' }
   ],
   talentJourney: [
@@ -63,23 +64,23 @@ export const STATIC_HOME_DATA = {
       palette: ['#111827', '#d1d5db', '#e5e7eb', '#7c2d39'],
       styleTags: ['ATS', 'Đơn giản'],
       layout: 'clean',
-      recommendedFor: ['Kỹ thuật viên', 'QA', 'Kho vận', 'Điều phối'],
+      recommendedFor: ['Chuyên viên Tư vấn BĐS', 'Pháp lý', 'Kho vận', 'Quản lý dự án'],
       highlights: ['Bố cục 1 trang', 'Tối ưu đọc nhanh', 'Nhấn vào kinh nghiệm'],
       preview: {
         fullName: 'Nguyễn Gia Huy',
-        title: 'Kỹ thuật viên bảo trì',
-        summary: '4 năm kinh nghiệm bảo trì dây chuyền, kiểm soát sự cố và phối hợp tổ sản xuất.',
-        meta: ['Biên Hòa, Đồng Nai', 'Sẵn sàng đi ca', 'Mong muốn 18-20 triệu'],
+        title: 'Chuyên viên Tư vấn BĐS',
+        summary: '4 năm kinh nghiệm chăm sóc khách hàng dự án, kiểm soát vấn đề pháp lý và phối hợp tổ kinh doanh dự án.',
+        meta: ['Biên Hòa, Đồng Nai', 'Sẵn sàng đi thị trường', 'Mong muốn 30-50 triệu'],
         stats: [
           { label: 'Kinh nghiệm', value: '4 năm' },
           { label: 'Dự án nổi bật', value: '12+' },
           { label: 'Phù hợp ATS', value: 'Cao' }
         ],
         experience: [
-          'Giảm 18% thời gian dừng máy nhờ checklist bảo trì định kỳ.',
-          'Phối hợp kỹ thuật điện, cơ khí và QC trong ca sản xuất.'
+          'Giảm 18% thời gian dừng máy nhờ checklist chăm sóc khách hàng định kỳ.',
+          'Phối hợp kỹ thuật điện, vấn đề và QC trong ca kinh doanh dự án.'
         ],
-        skills: ['PLC cơ bản', 'Bảo trì điện', '5S', 'An toàn vận hành']
+        skills: ['Chốt sale, Quản lý tệp KH', 'Chốt sale, Quản lý tệp KH', 'Chốt sale, Quản lý tệp KH', 'Phong thủy cơ bản']
       }
     },
     {
@@ -136,7 +137,7 @@ export const STATIC_HOME_DATA = {
         ],
         experience: [
           'Xây dựng nội dung cho chiến dịch social và landing page chuyển đổi.',
-          'Điều phối cộng tác viên, theo dõi KPI và tối ưu hiệu suất nội dung.'
+          'Quản lý dự án cộng tác viên, theo dõi KPI và tối ưu hiệu suất nội dung.'
         ],
         skills: ['Content plan', 'SEO', 'Analytics', 'Leadership']
       }
@@ -276,6 +277,32 @@ export const STATIC_HOME_DATA = {
       title: 'Tăng chuyển đổi ứng viên',
       description: 'Chi tiết việc làm rõ ràng, CV đa dạng và theo dõi ứng tuyển theo từng giai đoạn.',
       image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80'
+    }
+  ],
+  news: [
+    {
+      id: 'news-1',
+      category: 'Tư vấn',
+      title: '5 mẹo viết CV nổi bật cho lĩnh vực bất động sản, Sale Admin',
+      excerpt: 'Tập trung vào kỹ năng vận hành, tính kỷ luật, và số liệu kết quả để CV dễ được nhà tuyển dụng chú ý.',
+      publishedAt: '2026-04-10',
+      imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=900&q=80'
+    },
+    {
+      id: 'news-2',
+      category: 'Thị trường',
+      title: 'Xu hướng tuyển dụng 2026: Chuyên viên Tư vấn BĐS & Pháp lý tăng nhu cầu',
+      excerpt: 'Các doanh nghiệp kinh doanh dự án ưu tiên ứng viên có chứng chỉ, kinh nghiệm thực hành và khả năng làm việc theo ca.',
+      publishedAt: '2026-03-22',
+      imageUrl: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=900&q=80'
+    },
+    {
+      id: 'news-3',
+      category: 'Kinh nghiệm',
+      title: 'Chuẩn bị phỏng vấn: 8 câu hỏi thường gặp và cách trả lời',
+      excerpt: 'Gợi ý cách kể câu chuyện kinh nghiệm, xử lý tình huống và chứng minh sự phù hợp với ca/kíp.',
+      publishedAt: '2026-02-18',
+      imageUrl: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=80'
     }
   ]
 };

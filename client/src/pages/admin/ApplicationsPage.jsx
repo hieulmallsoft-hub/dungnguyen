@@ -28,8 +28,89 @@ function ApplicationsPage() {
   const [query, setQuery] = useState('');
   const [stage, setStage] = useState('all');
   const [source, setSource] = useState('all');
+  const [year, setYear] = useState('all');
+  const [month, setMonth] = useState('all');
+  const [day, setDay] = useState('all');
+
+  const handleYearChange = (nextYear) => {
+    setYear(nextYear);
+    setMonth('all');
+    setDay('all');
+  };
+
+  const handleMonthChange = (nextMonth) => {
+    setMonth(nextMonth);
+    setDay('all');
+  };
 
   const applications = data.items || [];
+
+  const availableYears = useMemo(() => {
+    const years = new Set();
+    for (const item of applications) {
+      const date = new Date(item.submittedAt);
+      if (!Number.isNaN(date.getTime())) {
+        years.add(date.getFullYear());
+      }
+    }
+    return Array.from(years)
+      .sort((a, b) => b - a)
+      .map((value) => String(value));
+  }, [applications]);
+
+  const availableMonths = useMemo(() => {
+    if (year === 'all') {
+      return [];
+    }
+    const months = new Set();
+    for (const item of applications) {
+      const date = new Date(item.submittedAt);
+      if (Number.isNaN(date.getTime())) {
+        continue;
+      }
+
+      const itemYear = String(date.getFullYear());
+      if (year !== 'all' && itemYear !== year) {
+        continue;
+      }
+
+      months.add(date.getMonth() + 1);
+    }
+
+    return Array.from(months)
+      .sort((a, b) => a - b)
+      .map((value) => String(value));
+  }, [applications, year]);
+
+  const availableDays = useMemo(() => {
+    if (year === 'all' || month === 'all') {
+      return [];
+    }
+    const days = new Set();
+    for (const item of applications) {
+      const date = new Date(item.submittedAt);
+      if (Number.isNaN(date.getTime())) {
+        continue;
+      }
+
+      const itemYear = String(date.getFullYear());
+      const itemMonth = String(date.getMonth() + 1);
+
+      if (year !== 'all' && itemYear !== year) {
+        continue;
+      }
+      if (month !== 'all' && itemMonth !== month) {
+        continue;
+      }
+
+      days.add(date.getDate());
+    }
+
+    return Array.from(days)
+      .sort((a, b) => a - b)
+      .map((value) => String(value));
+  }, [applications, month, year]);
+
   const filteredRows = useMemo(() => {
     return applications.filter((application) => {
       const matchesQuery =
@@ -40,9 +121,23 @@ function ApplicationsPage() {
           .includes(query.toLowerCase());
       const matchesStage = stage === 'all' || application.stage === stage;
       const matchesSource = source === 'all' || application.source === source;
-      return matchesQuery && matchesStage && matchesSource;
+
+      const submittedDate = new Date(application.submittedAt);
+      const submittedValid = !Number.isNaN(submittedDate.getTime());
+      const matchesYear = year === 'all' || (submittedValid && String(submittedDate.getFullYear()) === year);
+      const matchesMonth = month === 'all' || (submittedValid && String(submittedDate.getMonth() + 1) === month);
+      const matchesDay =
+        day === 'all' ||
+        (submittedValid &&
+          year !== 'all' &&
+          month !== 'all' &&
+          String(submittedDate.getFullYear()) === year &&
+          String(submittedDate.getMonth() + 1) === month &&
+          String(submittedDate.getDate()) === day);
+
+      return matchesQuery && matchesStage && matchesSource && matchesYear && matchesMonth && matchesDay;
     });
-  }, [applications, query, source, stage]);
+  }, [applications, day, month, query, source, stage, year]);
 
   const columns = [
     {
@@ -114,7 +209,34 @@ function ApplicationsPage() {
             searchPlaceholder="Tìm theo ứng viên, vị trí, doanh nghiệp hoặc người phụ trách"
             filters={[
               {
+                id: 'year',
+                label: 'Năm',
+                value: year,
+                onChange: handleYearChange,
+                options: [{ value: 'all', label: 'Tất cả năm' }, ...availableYears.map((value) => ({ value, label: value }))]
+              },
+              {
+                id: 'month',
+                label: 'Tháng',
+                value: month,
+                onChange: handleMonthChange,
+                disabled: year === 'all',
+                options: [
+                  { value: 'all', label: 'Tất cả tháng' },
+                  ...availableMonths.map((value) => ({ value, label: `Tháng ${value}` }))
+                ]
+              },
+              {
+                id: 'day',
+                label: 'Ngày',
+                value: day,
+                onChange: setDay,
+                disabled: year === 'all' || month === 'all',
+                options: [{ value: 'all', label: 'Tất cả ngày' }, ...availableDays.map((value) => ({ value, label: `Ngày ${value}` }))]
+              },
+              {
                 id: 'stage',
+                label: 'Giai đoạn',
                 value: stage,
                 onChange: setStage,
                 options: [
@@ -127,6 +249,7 @@ function ApplicationsPage() {
               },
               {
                 id: 'source',
+                label: 'Nguồn',
                 value: source,
                 onChange: setSource,
                 options: [

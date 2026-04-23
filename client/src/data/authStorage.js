@@ -1,4 +1,4 @@
-const AUTH_STORAGE_KEY = 'viec3mien_auth';
+const AUTH_STORAGE_KEY = 'SHGINVESTMENT_auth';
 
 export function getAuthSession() {
   try {

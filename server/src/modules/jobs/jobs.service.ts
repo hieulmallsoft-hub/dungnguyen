@@ -36,8 +36,11 @@ export class JobsService {
   mapPublicJob(job: JobEntity) {
     return {
       id: job.id,
+      companyId: job.companyId,
       title: translateDemoText(job.title),
       company: translateDemoText(job.company.name),
+      companyLogoUrl: job.company.logoUrl,
+      companyWebsite: job.company.website,
       location: translateDemoText(job.location),
       district: translateDemoText(job.district),
       salaryMin: job.salaryMin,
@@ -115,11 +118,21 @@ export class JobsService {
   }
 
   async getJobById(id: string) {
-    const job = await this.jobRepository.findOne({ where: { id } });
+    const job = await this.jobRepository.findOne({ where: { id, status: JobStatus.PUBLISHED } });
     if (!job) {
       throw new NotFoundException('Không tìm thấy việc làm.');
     }
-    return job;
+    const mapped = this.mapPublicJob(job);
+    const related = await this.jobRepository.find({
+      where: { companyId: job.companyId, status: JobStatus.PUBLISHED },
+      order: { createdAt: 'DESC' },
+      take: 6
+    });
+
+    return {
+      job: mapped,
+      relatedJobs: related.filter((item) => item.id !== job.id).slice(0, 4).map((item) => this.mapPublicJob(item))
+    };
   }
 
   async createJob(payload: CreateJobDto, user: AuthUserPayload) {

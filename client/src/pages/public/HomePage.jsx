@@ -24,8 +24,8 @@ const SORT_OPTIONS = [
   { value: 'salary_asc', label: 'Lương thấp trước' }
 ];
 
-const SAVED_JOBS_KEY = 'viec3mien_saved_jobs';
-const CV_DRAFTS_KEY = 'viec3mien_cv_drafts';
+const SAVED_JOBS_KEY = 'shginvestment_saved_jobs';
+const CV_DRAFTS_KEY = 'shginvestment_cv_drafts';
 const CV_FILTER_ORDER = ['Tất cả', 'Đơn giản', 'Chuyên nghiệp', 'Hiện đại', 'Ấn tượng', 'Harvard', 'ATS'];
 const FILTER_LABELS = {
   keyword: 'Từ khóa',
@@ -56,6 +56,15 @@ function formatDate(dateValue) {
     return dateValue;
   }
   return new Intl.DateTimeFormat('vi-VN').format(date);
+}
+
+function slugify(value) {
+  return String(value || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
 }
 
 function getInitials(name) {
@@ -2316,7 +2325,7 @@ function HomePage() {
     return (
       <main className="state-screen">
         <div className="state-card">
-          <h1>Việc 3 Miền</h1>
+          <h1>SHG INVESTMENT</h1>
           <p>Đang tải nền tảng tuyển dụng...</p>
         </div>
       </main>
@@ -2549,9 +2558,9 @@ function HomePage() {
                             <strong>Hạn nộp {formatDate(job.deadline)}</strong>
                           </div>
                           <div className="job-actions">
-                            <button type="button" className="btn btn-primary" onClick={() => openJobModal(job)}>
+                            <a className="btn btn-primary" href={`/viec-lam/${slugify(job.title)}/${job.id}`}>
                               Xem và ứng tuyển
-                            </button>
+                            </a>
                           </div>
                         </div>
                       </article>
@@ -2732,12 +2741,25 @@ function HomePage() {
             <div className="job-modal-grid">
               <div className="job-modal-content">
                 <article>
-                  <h4>Mô tả công việc</h4>
-                  <p>{selectedJob.summary}</p>
+                  <h4>I. THÔNG TIN CHUNG</h4>
+                  <ul>
+                    <li><strong>Mức lương:</strong> {selectedJob.salaryLabel}</li>
+                    <li><strong>Địa điểm làm việc:</strong> {selectedJob.location} - {selectedJob.district}</li>
+                    <li><strong>Hình thức làm việc:</strong> {selectedJob.typeLabel}</li>
+                  </ul>
                 </article>
 
                 <article>
-                  <h4>Yêu cầu</h4>
+                  <h4>II. MÔ TẢ CÔNG VIỆC</h4>
+                  <div className="summary-text">
+                    {selectedJob.summary.split('\n').map((para, i) => (
+                      <p key={i}>{para}</p>
+                    ))}
+                  </div>
+                </article>
+
+                <article>
+                  <h4>III. YÊU CẦU CÔNG VIỆC</h4>
                   <ul>
                     {selectedJob.requirements.map((item) => (
                       <li key={item}>{item}</li>
@@ -2746,12 +2768,17 @@ function HomePage() {
                 </article>
 
                 <article>
-                  <h4>Quyền lợi</h4>
+                  <h4>IV. QUYỀN LỢI</h4>
                   <ul>
                     {selectedJob.benefits.map((item) => (
                       <li key={item}>{item}</li>
                     ))}
                   </ul>
+                </article>
+
+                <article>
+                  <h4>V. CÁCH THỨC ỨNG TUYỂN</h4>
+                  <p>Hoàn thiện form đăng ký bên cạnh để gửi hồ sơ trực tiếp đến bộ phận tuyển dụng của chúng tôi.</p>
                 </article>
               </div>
 

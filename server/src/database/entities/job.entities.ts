@@ -28,10 +28,10 @@ export class JobEntity {
   @Column({ type: 'jsonb', default: () => "'[]'" })
   benefits!: string[];
 
-  @Column({ name: 'salary_min', type: 'int', nullable: true })
+  @Column({ name: 'salary_min', type: 'bigint', nullable: true, transformer: { to: (v) => v, from: (v) => (v ? Number(v) : null) } })
   salaryMin!: number | null;
 
-  @Column({ name: 'salary_max', type: 'int', nullable: true })
+  @Column({ name: 'salary_max', type: 'bigint', nullable: true, transformer: { to: (v) => v, from: (v) => (v ? Number(v) : null) } })
   salaryMax!: number | null;
 
   @Column({ default: 'VND' })

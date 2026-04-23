@@ -31,3 +31,32 @@ export const fetchAdminResource = async (resource, { signal } = {}) => {
 
   return response.json();
 };
+
+export const adminRequest = async (path, { method = 'GET', body, signal } = {}) => {
+  const token = getAccessToken();
+  const normalizedPath = path.startsWith('/api/')
+    ? path
+    : `/api/admin/${String(path || '').replace(/^\/+/, '')}`;
+
+  const headers = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(body !== undefined ? { 'Content-Type': 'application/json' } : {})
+  };
+
+  const response = await fetch(apiUrl(normalizedPath), {
+    method,
+    signal,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      clearAuthSession();
+    }
+
+    throw new Error(await readErrorMessage(response));
+  }
+
+  return response.json();
+};
