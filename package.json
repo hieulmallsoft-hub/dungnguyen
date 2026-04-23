@@ -1,14 +1,14 @@
 {
-  "name": "shginvestment-home-react-node",
+  "name": "shg-investment-home-react-node",
   "private": true,
   "version": "1.0.0",
-  "description": "Homepage giao dien Viec 3 Mien voi ReactJS + NodeJS",
+  "description": "Homepage SHG Investment voi ReactJS + NodeJS",
   "scripts": {
     "install:all": "npm install --prefix server && npm install --prefix client",
     "dev": "concurrently \"npm --prefix server run dev:watch\" \"npm --prefix client run dev\"",
     "dev:backend": "npm.cmd --prefix server run dev",
     "dev:frontend": "npm.cmd --prefix client run dev",
-    "dev:win": "start \"shginvestment-backend\" cmd /k \"npm.cmd --prefix server run dev\" && start \"shginvestment-frontend\" cmd /k \"npm.cmd --prefix client run dev\"",
+    "dev:win": "start \"shg-backend\" cmd /k \"npm.cmd --prefix server run dev\" && start \"shg-frontend\" cmd /k \"npm.cmd --prefix client run dev\"",
     "build": "npm --prefix server run build && npm --prefix client run build",
     "check": "npm --prefix server run check && npm --prefix client run check",
     "lint": "npm run check",

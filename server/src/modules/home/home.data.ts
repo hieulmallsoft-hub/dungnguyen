@@ -2,14 +2,14 @@ export const STATIC_HOME_DATA = {
   brand: {
     logoUrl: '/logo-shg.jpg',
     logoAlt: 'SHG Investment',
-    name: 'SHG INVESTMENT',
+    name: 'SHG Investment',
     subtitle: 'Nền tảng tuyển dụng cho lĩnh vực bất động sản, môi giới và quản lý dự án trên toàn quốc.',
     hotline: '0812 533 533',
-    email: 'support@SHGINVESTMENT.vn',
+    email: 'support@shginvest.vn',
     socialLinks: [
-      { label: 'Facebook', href: 'https://www.facebook.com/SHGINVESTMENTtuyendung' },
-      { label: 'Zalo', href: 'https://zalo.me/SHGINVESTMENTtuyendung' },
-      { label: 'TikTok', href: 'https://www.tiktok.com/@SHGINVESTMENTtuyendung1' }
+      { label: 'Website', href: 'https://shginvest.vn' },
+      { label: 'Email', href: 'mailto:support@shginvest.vn' },
+      { label: 'Hotline', href: 'tel:0812533533' }
     ]
   },
   nav: [
@@ -45,7 +45,7 @@ export const STATIC_HOME_DATA = {
     }
   ],
   testimonials: [
-    { id: 'ts-1', author: 'Trần Bảo Châu, Quản trị nền tảng', quote: 'SHG INVESTMENT giúp đội vận hành theo dõi chất lượng tin đăng, cam kết phản hồi từ doanh nghiệp và tiến trình ứng viên trong một nơi duy nhất.' },
+    { id: 'ts-1', author: 'Trần Bảo Châu, Quản trị nền tảng', quote: 'SHG Investment giúp đội vận hành theo dõi chất lượng tin đăng, cam kết phản hồi từ doanh nghiệp và tiến trình ứng viên trong một nơi duy nhất.' },
     { id: 'ts-2', author: 'Phạm Thu Linh, Trưởng phòng nhân sự', quote: 'Bảng điều khiển quản trị rõ ràng, đội nhân sự có thể lọc hồ sơ nhanh và xem lịch sử thay đổi tin đăng để ra quyết định tốt hơn.' }
   ],
   talentJourney: [

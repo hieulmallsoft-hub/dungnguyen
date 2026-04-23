@@ -6,14 +6,14 @@ import { clearAuthSession, getAuthSession, isAdminSession, setAuthSession } from
 function AdminLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState('admin@shginvestment.vn');
+  const [email, setEmail] = useState('admin@shginvest.vn');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const from = location.state?.from?.pathname || '/admin/dashboard';
 
   useEffect(() => {
-    document.title = 'Đăng nhập quản trị | SHG INVESTMENT';
+    document.title = 'Đăng nhập quản trị | SHG Investment';
   }, []);
 
   if (isAdminSession(getAuthSession())) {
@@ -56,7 +56,7 @@ function AdminLoginPage() {
   return (
     <main className="admin-shell grid min-h-screen place-items-center px-4 py-10">
       <section className="w-full max-w-md rounded-[28px] border border-white/70 bg-white/95 p-6 shadow-panel">
-        <p className="text-xs font-bold uppercase tracking-[0.3em] text-ember-600">SHG INVESTMENT</p>
+        <p className="text-xs font-bold uppercase tracking-[0.3em] text-ember-600">SHG Investment</p>
         <h1 className="mt-3 font-display text-3xl text-slate-950">Đăng nhập quản trị</h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">Dùng tài khoản admin để vào trung tâm điều hành.</p>
 

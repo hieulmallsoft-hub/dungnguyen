@@ -24,8 +24,8 @@ const SORT_OPTIONS = [
   { value: 'salary_asc', label: 'Lương thấp trước' }
 ];
 
-const SAVED_JOBS_KEY = 'shginvestment_saved_jobs';
-const CV_DRAFTS_KEY = 'shginvestment_cv_drafts';
+const SAVED_JOBS_KEY = 'shg_saved_jobs';
+const CV_DRAFTS_KEY = 'shg_cv_drafts';
 const CV_FILTER_ORDER = ['Tất cả', 'Đơn giản', 'Chuyên nghiệp', 'Hiện đại', 'Ấn tượng', 'Harvard', 'ATS'];
 const FILTER_LABELS = {
   keyword: 'Từ khóa',
@@ -2325,7 +2325,7 @@ function HomePage() {
     return (
       <main className="state-screen">
         <div className="state-card">
-          <h1>SHG INVESTMENT</h1>
+          <h1>SHG Investment</h1>
           <p>Đang tải nền tảng tuyển dụng...</p>
         </div>
       </main>

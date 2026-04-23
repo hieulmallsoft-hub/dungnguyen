@@ -22,7 +22,7 @@ function Sidebar({ open, onClose }) {
       >
         <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-ember-300">SHG INVESTMENT</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-ember-300">SHG Investment</p>
             <h2 className="mt-2 font-display text-2xl">Trung tâm quản trị</h2>
           </div>
           <button type="button" className="admin-btn-ghost lg:hidden" onClick={onClose}>

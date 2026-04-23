@@ -1,8 +1,8 @@
-﻿# shginvestment Home - ReactJS + NodeJS
+﻿# SHG Investment - ReactJS + NodeJS
 
-Giao diện trang home cho `shginvestment.vn` được dựng lại bằng:
+Giao diện trang home cho `shginvest.vn` được dựng lại bằng:
 - Frontend: React + Vite
-- Backend: Node.js + Express
+- Backend: NestJS + Node.js
 
 ## Cấu trúc
 
@@ -34,4 +34,4 @@ npm run build
 npm run start
 ```
 
-Sau khi build, Express sẽ tự serve `client/dist`.
+Frontend build ra `client/dist`; backend phục vụ API riêng.
