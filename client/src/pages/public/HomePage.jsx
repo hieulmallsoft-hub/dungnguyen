@@ -1,6 +1,7 @@
 import '../../App.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { apiUrl } from '../../data/apiBase';
+import { Link, useLocation } from 'react-router-dom';
 
 const EMPTY_FILTERS = {
   keyword: '',
@@ -717,33 +718,68 @@ function mergeCvDraft(template, storedDraft) {
   };
 }
 
-function Header({ homeData }) {
+function Header({ homeData, layout = 'home' }) {
+  const location = useLocation();
+  const navItems =
+    layout === 'home'
+      ? homeData.nav
+      : homeData.nav.filter((item) => item.href.startsWith('/'));
+  const primaryAction =
+    layout === 'cv'
+      ? { href: '/cv-mau', label: 'Xem mẫu CV' }
+      : layout === 'news'
+        ? { href: '/tin-tuc', label: 'Đọc tin tức' }
+        : layout === 'jobs'
+          ? { href: '/viec-lam', label: 'Xem việc làm' }
+          : layout === 'journey'
+            ? { href: '/quy-trinh', label: 'Xem quy trình' }
+            : layout === 'companies'
+              ? { href: '/doanh-nghiep', label: 'Xem doanh nghiệp' }
+              : layout === 'services'
+                ? { href: '/dich-vu', label: 'Xem dịch vụ' }
+                : { href: '#jobs', label: 'Bắt đầu tìm việc' };
+
   return (
     <header className="topbar">
       <div className="container topbar-inner">
-        <a className="brand" href="#" aria-label={homeData.brand.logoAlt || homeData.brand.name}>
+        <Link className="brand" to="/" aria-label={homeData.brand.logoAlt || homeData.brand.name}>
           <img
             className="brand-logo"
             src={homeData.brand.logoUrl || '/logo-shg.jpg'}
             alt={homeData.brand.logoAlt || homeData.brand.name}
           />
-        </a>
+        </Link>
 
         <nav className="top-nav">
-          {homeData.nav.map((item) => (
-            <a key={item.label} href={item.href}>
-              {item.label}
-            </a>
-          ))}
+          {navItems.map((item) => {
+            const isRouteLink = item.href.startsWith('/');
+            const isActive = isRouteLink && location.pathname === item.href;
+
+            return isRouteLink ? (
+              <Link key={item.label} to={item.href} className={isActive ? 'is-active' : ''}>
+                {item.label}
+              </Link>
+            ) : (
+              <a key={item.label} href={item.href}>
+                {item.label}
+              </a>
+            );
+          })}
         </nav>
 
         <div className="top-actions">
           <a href={`tel:${homeData.brand.hotline.replace(/\s+/g, '')}`} className="chip">
             Hotline {homeData.brand.hotline}
           </a>
-          <a href="#jobs" className="btn btn-primary">
-            Bắt đầu tìm việc
-          </a>
+          {primaryAction.href.startsWith('/') ? (
+            <Link to={primaryAction.href} className="btn btn-primary">
+              {primaryAction.label}
+            </Link>
+          ) : (
+            <a href={primaryAction.href} className="btn btn-primary">
+              {primaryAction.label}
+            </a>
+          )}
         </div>
       </div>
     </header>
@@ -753,14 +789,47 @@ function Header({ homeData }) {
 function Hero({ homeData, activeBanner, onChangeBanner, quickSuggestions, spotlightCompanies, onQuickSearch }) {
   const banner = homeData.heroBanners[activeBanner] ?? homeData.heroBanners[0];
   const isImageOnlyBanner = banner.displayMode === 'image-only';
+  const hasMultipleBanners = homeData.heroBanners.length > 1;
+
+  const renderHeroDots = () => {
+    if (!hasMultipleBanners) {
+      return null;
+    }
+
+    return (
+      <div className="hero-dots" aria-label="Bộ chuyển banner">
+        {homeData.heroBanners.map((item, index) => (
+          <button
+            key={item.id}
+            type="button"
+            className={index === activeBanner ? 'active' : ''}
+            onClick={() => onChangeBanner(index)}
+            aria-label={`Chuyển banner ${index + 1}`}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const renderHeroSlides = () => (
+    <div className="hero-slide-stack" aria-live="polite">
+      {homeData.heroBanners.map((item, index) => {
+        const isActive = index === activeBanner;
+
+        return (
+          <picture key={item.id} className={`hero-slide${isActive ? ' is-active' : ''}`} aria-hidden={isActive ? 'false' : 'true'}>
+            <source media="(max-width: 768px)" srcSet={item.imageMobile} />
+            <img src={item.imageDesktop} alt={isActive ? item.imageAlt || item.title : ''} />
+          </picture>
+        );
+      })}
+    </div>
+  );
 
   return (
     <section className={`hero${isImageOnlyBanner ? ' hero-brand-banner' : ''}`}>
       <div className="hero-media">
-        <picture>
-          <source media="(max-width: 768px)" srcSet={banner.imageMobile} />
-          <img src={banner.imageDesktop} alt={banner.imageAlt || banner.title} />
-        </picture>
+        {renderHeroSlides()}
         {!isImageOnlyBanner && <div className="hero-overlay" />}
       </div>
 
@@ -794,17 +863,7 @@ function Hero({ homeData, activeBanner, onChangeBanner, quickSuggestions, spotli
               </a>
             </div>
 
-            <div className="hero-dots" aria-label="Bộ chuyển banner">
-              {homeData.heroBanners.map((item, index) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={index === activeBanner ? 'active' : ''}
-                  onClick={() => onChangeBanner(index)}
-                  aria-label={`Chuyển banner ${index + 1}`}
-                />
-              ))}
-            </div>
+            {renderHeroDots()}
           </div>
 
           <aside className="hero-sidecard">
@@ -835,6 +894,8 @@ function Hero({ homeData, activeBanner, onChangeBanner, quickSuggestions, spotli
           </aside>
         </div>
       )}
+
+      {isImageOnlyBanner ? <div className="container hero-brand-dots">{renderHeroDots()}</div> : null}
 
       <div className="container metrics-grid">
         {homeData.quickStats.map((item) => (
@@ -1221,6 +1282,111 @@ function CvTemplateSection({ templates = [], onOpenTemplate }) {
                     Xem và sửa
                   </button>
                 </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function NewsSection({ items = [] }) {
+  if (!items.length) {
+    return null;
+  }
+
+  return (
+    <section className="news-section" id="tin-tuc">
+      <div className="container section-shell">
+        <div className="section-heading">
+          <p>Tin tức tuyển dụng</p>
+          <h2>Cập nhật mẹo ứng tuyển và xu hướng thị trường mới nhất</h2>
+          <span>{items.length} bài viết đang hiển thị</span>
+        </div>
+
+        <div className="news-grid">
+          {items.map((item) => (
+            <article key={item.id} className="news-card">
+              <img src={item.imageUrl} alt={item.title} loading="lazy" />
+              <div className="news-card-body">
+                <span className="news-card-category">{item.category}</span>
+                <h3>{item.title}</h3>
+                <p>{item.excerpt}</p>
+                <small>Đăng ngày {formatDate(item.publishedAt)}</small>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CompaniesSection({ companies = [], testimonials = [] }) {
+  if (!companies.length && !testimonials.length) {
+    return null;
+  }
+
+  return (
+    <section className="companies-section" id="companies">
+      <div className="container section-shell">
+        <div className="section-heading">
+          <p>Doanh nghiệp đồng hành</p>
+          <h2>Đối tác tuyển dụng đang hoạt động và phản hồi rõ ràng trên nền tảng</h2>
+        </div>
+
+        <div className="company-panels">
+          <div className="panel">
+            <h3>Doanh nghiệp nổi bật</h3>
+            {companies.map((company) => (
+              <article key={company.id} className="company-item">
+                <div className="logo-fallback">{getInitials(company.name)}</div>
+                <div>
+                  <strong>{company.name}</strong>
+                  <p>
+                    {company.field} | {company.location}
+                  </p>
+                  <small>{company.openJobs} vị trí đang tuyển</small>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="panel quote-panel">
+            <h3>Phản hồi từ đối tác</h3>
+            {testimonials.map((item) => (
+              <blockquote key={item.id}>
+                <p>{item.quote}</p>
+                <cite>{item.author}</cite>
+              </blockquote>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ServicesSection({ items = [] }) {
+  if (!items.length) {
+    return null;
+  }
+
+  return (
+    <section className="services" id="services">
+      <div className="container section-shell">
+        <div className="section-heading">
+          <p>Giải pháp cho doanh nghiệp</p>
+          <h2>Dịch vụ tuyển dụng rõ ràng và thân thiện cho doanh nghiệp</h2>
+        </div>
+        <div className="service-grid">
+          {items.map((service) => (
+            <article key={service.id} className="service-card">
+              <img src={service.image} alt={service.title} loading="lazy" />
+              <div>
+                <h3>{service.title}</h3>
+                <p>{service.description}</p>
               </div>
             </article>
           ))}
@@ -1771,7 +1937,23 @@ function CvEditorModal({
   );
 }
 
-function HomePage() {
+function HomePage({ layout = 'home' }) {
+  const pageLayout =
+    layout === 'jobs' ||
+    layout === 'cv' ||
+    layout === 'news' ||
+    layout === 'journey' ||
+    layout === 'companies' ||
+    layout === 'services'
+      ? layout
+      : 'home';
+  const showHero = pageLayout === 'home';
+  const showJobsSection = pageLayout === 'home' || pageLayout === 'jobs';
+  const showCompaniesSection = pageLayout === 'companies';
+  const showJourneySection = pageLayout === 'home' || pageLayout === 'journey';
+  const showCvSection = pageLayout === 'home' || pageLayout === 'cv';
+  const showServicesSection = pageLayout === 'home' || pageLayout === 'services';
+  const showNewsSection = pageLayout === 'news';
   const [homeData, setHomeData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingError, setLoadingError] = useState('');
@@ -1824,6 +2006,20 @@ function HomePage() {
       document.body.classList.remove('modal-open');
     };
   }, []);
+
+  useEffect(() => {
+    const titles = {
+      home: 'SHG Investment | Home',
+      jobs: 'Việc làm | SHG Investment',
+      cv: 'CV mẫu | SHG Investment',
+      news: 'Tin tức | SHG Investment',
+      journey: 'Quy trình | SHG Investment',
+      companies: 'Doanh nghiệp | SHG Investment',
+      services: 'Dịch vụ | SHG Investment'
+    };
+
+    document.title = titles[pageLayout] || titles.home;
+  }, [pageLayout]);
 
   useEffect(() => {
     let active = true;
@@ -2345,18 +2541,21 @@ function HomePage() {
 
   return (
     <div className="public-home site-shell">
-      <Header homeData={homeData} />
-      <Hero
-        homeData={homeData}
-        activeBanner={activeBanner}
-        onChangeBanner={setActiveBanner}
-        quickSuggestions={heroSuggestions}
-        spotlightCompanies={spotlightCompanies}
-        onQuickSearch={handleQuickSearch}
-      />
+      <Header homeData={homeData} layout={pageLayout} />
+      {showHero ? (
+        <Hero
+          homeData={homeData}
+          activeBanner={activeBanner}
+          onChangeBanner={setActiveBanner}
+          quickSuggestions={heroSuggestions}
+          spotlightCompanies={spotlightCompanies}
+          onQuickSearch={handleQuickSearch}
+        />
+      ) : null}
 
       <main>
-        <section className="job-explorer" id="jobs">
+        {showJobsSection ? (
+          <section className="job-explorer" id="jobs">
           <div className="container section-shell section-shell-wide">
             <div className="section-heading">
               <p>Khám phá việc làm</p>
@@ -2623,37 +2822,45 @@ function HomePage() {
                   ))}
                 </div>
 
-                <div className="panel" id="companies">
-                  <h3>Doanh nghiệp nổi bật</h3>
-                  {homeData.topCompanies.map((company) => (
-                    <article key={company.id} className="company-item">
-                      <div className="logo-fallback">{getInitials(company.name)}</div>
-                      <div>
-                        <strong>{company.name}</strong>
-                        <p>
-                          {company.field} | {company.location}
-                        </p>
-                        <small>{company.openJobs} vị trí đang tuyển</small>
-                      </div>
-                    </article>
-                  ))}
-                </div>
+                {pageLayout === 'home' ? (
+                  <>
+                    <div className="panel" id="companies">
+                      <h3>Doanh nghiệp nổi bật</h3>
+                      {homeData.topCompanies.map((company) => (
+                        <article key={company.id} className="company-item">
+                          <div className="logo-fallback">{getInitials(company.name)}</div>
+                          <div>
+                            <strong>{company.name}</strong>
+                            <p>
+                              {company.field} | {company.location}
+                            </p>
+                            <small>{company.openJobs} vị trí đang tuyển</small>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
 
-                <div className="panel quote-panel">
-                  <h3>Phản hồi từ đối tác</h3>
-                  {homeData.testimonials.map((item) => (
-                    <blockquote key={item.id}>
-                      <p>{item.quote}</p>
-                      <cite>{item.author}</cite>
-                    </blockquote>
-                  ))}
-                </div>
+                    <div className="panel quote-panel">
+                      <h3>Phản hồi từ đối tác</h3>
+                      {homeData.testimonials.map((item) => (
+                        <blockquote key={item.id}>
+                          <p>{item.quote}</p>
+                          <cite>{item.author}</cite>
+                        </blockquote>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
               </aside>
             </div>
           </div>
-        </section>
+          </section>
+        ) : null}
 
-        <section className="journey" id="journey">
+        {showCompaniesSection ? <CompaniesSection companies={homeData.topCompanies} testimonials={homeData.testimonials} /> : null}
+
+        {showJourneySection ? (
+          <section className="journey" id="journey">
           <div className="container section-shell">
             <div className="section-heading">
               <p>Hành trình ứng viên</p>
@@ -2669,29 +2876,14 @@ function HomePage() {
               ))}
             </div>
           </div>
-        </section>
+          </section>
+        ) : null}
 
-        <CvTemplateSection templates={homeData.cvTemplates} onOpenTemplate={openCvModal} />
+        {showCvSection ? <CvTemplateSection templates={homeData.cvTemplates} onOpenTemplate={openCvModal} /> : null}
 
-        <section className="services" id="services">
-          <div className="container section-shell">
-            <div className="section-heading">
-              <p>Giải pháp cho doanh nghiệp</p>
-              <h2>Dịch vụ tuyển dụng rõ ràng và thân thiện cho doanh nghiệp</h2>
-            </div>
-            <div className="service-grid">
-              {homeData.services.map((service) => (
-                <article key={service.id} className="service-card">
-                  <img src={service.image} alt={service.title} loading="lazy" />
-                  <div>
-                    <h3>{service.title}</h3>
-                    <p>{service.description}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+        {showNewsSection ? <NewsSection items={homeData.news} /> : null}
+
+        {showServicesSection ? <ServicesSection items={homeData.services} /> : null}
       </main>
 
       <footer className="site-footer">

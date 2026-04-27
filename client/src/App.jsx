@@ -16,6 +16,9 @@ const ReportsPage = lazy(() => import('./pages/admin/ReportsPage'));
   const JobsOnlyPage = lazy(() => import('./pages/public/JobsOnlyPage'));
   const CvOnlyPage = lazy(() => import('./pages/public/CvOnlyPage'));
   const NewsOnlyPage = lazy(() => import('./pages/public/NewsOnlyPage'));
+  const JourneyOnlyPage = lazy(() => import('./pages/public/JourneyOnlyPage'));
+  const CompaniesOnlyPage = lazy(() => import('./pages/public/CompaniesOnlyPage'));
+  const ServicesOnlyPage = lazy(() => import('./pages/public/ServicesOnlyPage'));
   const JobDetailPage = lazy(() => import('./pages/public/JobDetailPage'));
 
 function App() {
@@ -28,6 +31,9 @@ function App() {
           <Route path="/viec-lam/:slug/:id" element={<JobDetailPage />} />
           <Route path="/cv-mau" element={<CvOnlyPage />} />
           <Route path="/tin-tuc" element={<NewsOnlyPage />} />
+          <Route path="/quy-trinh" element={<JourneyOnlyPage />} />
+          <Route path="/doanh-nghiep" element={<CompaniesOnlyPage />} />
+          <Route path="/dich-vu" element={<ServicesOnlyPage />} />
           <Route path="/jobs" element={<Navigate to="/viec-lam" replace />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route

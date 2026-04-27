@@ -16,32 +16,43 @@ export const STATIC_HOME_DATA = {
     { label: 'Việc làm', href: '/viec-lam' },
     { label: 'CV mẫu', href: '/cv-mau' },
     { label: 'Tin tức', href: '/tin-tuc' },
-    { label: 'Doanh nghiệp', href: '#companies' },
-    { label: 'Quy trình', href: '#journey' },
-    { label: 'Dịch vụ', href: '#services' }
+    { label: 'Doanh nghiệp', href: '/doanh-nghiep' },
+    { label: 'Quy trình', href: '/quy-trinh' },
+    { label: 'Dịch vụ', href: '/dich-vu' }
   ],
   heroBanners: [
     {
       id: 'hero-1',
       displayMode: 'image-only',
-      title: 'Tuyển dụng hiệu quả cho lĩnh vực bất động sản',
-      description: 'Tập trung việc làm chất lượng, thông tin rõ ràng và luồng ứng tuyển nhanh trong một giao diện duy nhất.',
-      imageDesktop: '/banner-shg.jpg',
-      imageMobile: '/banner-shg.jpg',
-      imageAlt: 'Công ty Cổ phần Quốc tế SHG',
+      title: 'Giới thiệu Công ty Cổ phần Quốc tế SHG',
+      description: 'Banner giới thiệu thương hiệu, lĩnh vực hoạt động và hệ sinh thái đối tác của SHG Investment.',
+      imageDesktop: '/banner-home-1.webp',
+      imageMobile: '/banner-home-1.webp',
+      imageAlt: 'Banner giới thiệu SHG Investment và các đối tác doanh nghiệp',
       ctaPrimary: { label: 'Tìm việc ngay', href: '/viec-lam' },
       ctaSecondary: { label: 'Tạo CV ứng tuyển', href: '/cv-mau' }
     },
     {
       id: 'hero-2',
       displayMode: 'image-only',
-      title: 'Tối ưu chi phí tuyển dụng cho doanh nghiệp',
-      description: 'Lọc ứng viên theo khu vực và kỹ năng, kết hợp bảng điều hành vận hành để quản trị chất lượng tin đăng.',
-      imageDesktop: '/banner-shg.jpg',
-      imageMobile: '/banner-shg.jpg',
-      imageAlt: 'Công ty Cổ phần Quốc tế SHG',
-      ctaPrimary: { label: 'Đăng tin tuyển dụng', href: '#services' },
-      ctaSecondary: { label: 'Xem doanh nghiệp', href: '#companies' }
+      title: 'Tuyển dụng công nhân sản xuất thu nhập tới 20 triệu',
+      description: 'Banner tuyển dụng công nhân sản xuất với thông tin khu vực tuyển và quyền lợi nổi bật.',
+      imageDesktop: '/banner-home-2.webp',
+      imageMobile: '/banner-home-2.webp',
+      imageAlt: 'Banner tuyển dụng công nhân sản xuất của SHG Investment',
+      ctaPrimary: { label: 'Đăng tin tuyển dụng', href: '/dich-vu' },
+      ctaSecondary: { label: 'Xem doanh nghiệp', href: '/doanh-nghiep' }
+    },
+    {
+      id: 'hero-3',
+      displayMode: 'image-only',
+      title: 'Dịch vụ tuyển dụng và cung ứng lao động của SHG',
+      description: 'Banner giới thiệu dịch vụ cung ứng lao động phổ thông, thời vụ và tư vấn việc làm.',
+      imageDesktop: '/banner-home-3.webp',
+      imageMobile: '/banner-home-3.webp',
+      imageAlt: 'Banner dịch vụ tuyển dụng và cung ứng lao động của SHG Investment',
+      ctaPrimary: { label: 'Đăng tin tuyển dụng', href: '/dich-vu' },
+      ctaSecondary: { label: 'Xem doanh nghiệp', href: '/doanh-nghiep' }
     }
   ],
   testimonials: [
