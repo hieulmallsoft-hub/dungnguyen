@@ -9,8 +9,9 @@
     "check": "tsc --noEmit",
     "dev": "tsc -p tsconfig.build.json && node dist/main.js",
     "dev:watch": "node scripts/dev.mjs",
+    "start:dev": "node scripts/dev.mjs",
     "lint": "npm run check",
-    "test": "npm run check",
+    "test": "npm run check && npm run build && node tests/product-readiness.test.js",
     "start": "node dist/main.js"
   },
   "dependencies": {

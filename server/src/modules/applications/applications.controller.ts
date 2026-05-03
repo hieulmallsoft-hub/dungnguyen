@@ -1,8 +1,12 @@
 import { randomUUID } from 'crypto';
 import { existsSync, mkdirSync } from 'fs';
 import { basename, extname, join } from 'path';
-import { BadRequestException, Body, Controller, Param, Patch, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Param, Patch, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
+import { Roles } from '../../common/auth/roles.decorator';
+import { RolesGuard } from '../../common/auth/roles.guard';
+import { UserRole } from '../../common/enums/domain.enums';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationStatusDto } from './dto/update-application-status.dto';
@@ -84,6 +88,8 @@ export class ApplicationsController {
   }
 
   @Patch(':applicationId/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.RECRUITER)
   updateStatus(@Param('applicationId') applicationId: string, @Body() payload: UpdateApplicationStatusDto) {
     return this.applicationsService.updateStatus(applicationId, payload);
   }

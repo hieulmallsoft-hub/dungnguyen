@@ -86,8 +86,7 @@ export class AdminService {
         { id: 'health-verified-employers', label: 'Doanh nghiệp đã xác minh', value: companies.filter((item) => item.status === 'verified').length, hint: 'Doanh nghiệp đã qua bước kiểm duyệt thủ công và có thể đăng tuyển ngay.', status: 'healthy' },
         { id: 'health-first-response', label: 'Thời gian phản hồi đầu tiên', value: 6.4, hint: 'Số giờ từ lúc ứng tuyển đến khi người phụ trách tuyển dụng bắt đầu xem xét trong bộ dữ liệu hiện tại.', status: 'healthy' },
         { id: 'health-fraud-resolved', label: 'Báo cáo gian lận đã xử lý', value: reports.filter((item) => item.status === 'resolved').length, hint: 'Các báo cáo tin cậy và an toàn đã được đội vận hành đóng lại.', status: 'healthy' }
-      ],
-      dataSource: 'postgresql://postgres@localhost:5432/shginvestment_admin'
+      ]
     };
   }
 

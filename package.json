@@ -9,6 +9,7 @@
     "dev:backend": "npm.cmd --prefix server run dev",
     "dev:frontend": "npm.cmd --prefix client run dev",
     "dev:win": "start \"shg-backend\" cmd /k \"npm.cmd --prefix server run dev\" && start \"shg-frontend\" cmd /k \"npm.cmd --prefix client run dev\"",
+    "start:dev": "npm --prefix server run start:dev",
     "build": "npm --prefix server run build && npm --prefix client run build",
     "check": "npm --prefix server run check && npm --prefix client run check",
     "lint": "npm run check",
