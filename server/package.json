@@ -12,6 +12,7 @@
     "start:dev": "node scripts/dev.mjs",
     "lint": "npm run check",
     "test": "npm run check && npm run build && node tests/product-readiness.test.js",
+    "prestart": "npm run build",
     "start": "node dist/main.js"
   },
   "dependencies": {

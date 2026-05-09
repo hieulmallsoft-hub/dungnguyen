@@ -2890,20 +2890,7 @@ function HomePage({ layout = 'home' }) {
         <div className="container footer-grid">
           <div>
             <h3>{homeData.brand.name}</h3>
-            <p>{homeData.brand.subtitle}</p>
-            <p>
-              Hotline: {homeData.brand.hotline} | Email: {homeData.brand.email}
-            </p>
-          </div>
-          <div>
-            <h4>Kết nối</h4>
-            <div className="social-links">
-              {homeData.brand.socialLinks.map((link) => (
-                <a key={link.label} href={link.href} target="_blank" rel="noreferrer">
-                  {link.label}
-                </a>
-              ))}
-            </div>
+            <p>Nền tảng tuyển dụng việc làm tại các khu công nghiệp lớn Hà Nam và Bắc Ninh, quản lý dự án việc làm trên toàn miền Bắc.</p>
           </div>
         </div>
       </footer>
@@ -3005,15 +2992,16 @@ function HomePage({ layout = 'home' }) {
                   required
                 />
 
-                <label htmlFor="cvFile">Tải CV từ máy tính</label>
+                <label className="hidden" htmlFor="cvFile">Tải CV từ máy tính</label>
                 <input
                   ref={cvFileInputRef}
                   id="cvFile"
+                  className="hidden"
                   type="file"
                   accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   onChange={(event) => setApplyForm((prev) => ({ ...prev, cvFile: event.target.files?.[0] || null }))}
                 />
-                <p className="file-hint">
+                <p className="hidden file-hint">
                   {applyForm.cvFile ? `Đã chọn: ${applyForm.cvFile.name}` : 'Chọn file PDF, DOC hoặc DOCX từ máy tính.'}
                 </p>
 

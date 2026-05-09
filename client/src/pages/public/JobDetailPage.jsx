@@ -333,7 +333,7 @@ function JobDetailPage() {
                     required
                   />
                 </label>
-                <label>
+                <label className="hidden">
                   CV (PDF/DOC)
                   <input
                     ref={fileInputRef}
